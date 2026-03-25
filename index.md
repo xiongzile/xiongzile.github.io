@@ -1,4 +1,4 @@
 ## Articles
 
-- [TTY vs Console in Linux](tty-console.md)
-- [Notes](notes.md)
+- [TTY vs Console in Linux](tty-console)
+- [Notes](notes)
