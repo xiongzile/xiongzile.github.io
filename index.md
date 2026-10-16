@@ -1,7 +1,1 @@
-## Linux kernel 
-
-- [TTY vs Console in Linux(WIP)](tty-console)
-
-## LLVM
-
-- [LLVM: CIR: add relative vtable support](llvm-cir-relativevtable)
+[\[WIP\]2026-summary](2026-summary.md)
