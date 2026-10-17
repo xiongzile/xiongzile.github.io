@@ -30,6 +30,6 @@ wip: true
 
 Start the body with second-level headings; the template displays the post title and generates its table of contents. Prefix the title with `[WIP]` for an unfinished post.
 
-For a new tag, add a matching file under `_topics/` using one of the existing files as a template. Jekyll generates its page at `/tags/<tag>/`.
+For a new tag, add a matching file under `_topics/` using one of the existing files as a template. Use a hyphenated filename for tags with spaces: `build system` uses `_topics/build-system.md` and generates `/tags/build-system/`.
 
 The existing post URLs remain `/mlir-toy-compiler.html` and `/2026-summary.html`.

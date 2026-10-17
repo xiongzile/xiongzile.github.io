@@ -9,7 +9,8 @@ title: Tags
     {% assign all_tags = articles | map: 'tags' | join: ',' | split: ',' | uniq | sort %}
     {% for tag in all_tags %}
       {% assign tagged = articles | where_exp: 'article', 'article.tags contains tag' %}
-      <li class="tags-item"><a href="{{ '/tags/' | append: tag | append: '/' | relative_url }}">{{ tag | escape }}</a><span> – </span>{{ tagged.size }} {% if tagged.size == 1 %}post{% else %}posts{% endif %}</li>
+      {% assign tag_slug = tag | slugify %}
+      <li class="tags-item"><a href="{{ '/tags/' | append: tag_slug | append: '/' | relative_url }}">{{ tag | escape }}</a><span> – </span>{{ tagged.size }} {% if tagged.size == 1 %}post{% else %}posts{% endif %}</li>
     {% endfor %}
   </ul>
 </div>

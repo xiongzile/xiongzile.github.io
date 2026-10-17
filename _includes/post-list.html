@@ -7,7 +7,7 @@
     <div>
       <h2 class="bloglist-title"><a href="{{ article.url | relative_url }}">{{ article.title | escape }}</a></h2>
       <div class="bloglist-tags">
-        {% for tag in article.tags %}<a class="tag" href="{{ '/tags/' | append: tag | append: '/' | relative_url }}">{{ tag | escape }}</a>{% endfor %}
+        {% for tag in article.tags %}{% assign tag_slug = tag | slugify %}<a class="tag" href="{{ '/tags/' | append: tag_slug | append: '/' | relative_url }}">{{ tag | escape }}</a>{% endfor %}
       </div>
       <div class="description"><p>{{ article.description | escape }}</p>…<p></p></div>
       <a class="readmore" href="{{ article.url | relative_url }}">Read more&nbsp;<span class="arrow">→</span></a>

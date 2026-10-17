@@ -11,7 +11,7 @@ layout: default
       <li><time class="dt-published" datetime="{{ page.date | date: '%Y-%m-%d' }}">{% include date.html date=page.date format='%b %Y' %}</time></li>
       <li title="{{ words }} words"><span class="separator" aria-hidden="true">•</span>{{ minutes }} min read</li>
       <li class="tag"><span class="separator" aria-hidden="true">•</span>Tags:&nbsp;</li>
-      {% for tag in page.tags %}<li class="tag"><a class="p-category" href="{{ '/tags/' | append: tag | append: '/' | relative_url }}">{{ tag | escape }}</a>{% unless forloop.last %},&nbsp;{% endunless %}</li>{% endfor %}
+      {% for tag in page.tags %}{% assign tag_slug = tag | slugify %}<li class="tag"><a class="p-category" href="{{ '/tags/' | append: tag_slug | append: '/' | relative_url }}">{{ tag | escape }}</a>{% unless forloop.last %},&nbsp;{% endunless %}</li>{% endfor %}
     </ul>
     {% include toc.html html=content %}
     <section class="e-content body">{{ content | replace: '<pre class="highlight">', '<pre class="z-code">' }}</section>

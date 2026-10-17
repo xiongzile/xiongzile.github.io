@@ -3,7 +3,7 @@ layout: post
 title: "[WIP] 2026 Year in Review"
 date: 2026-10-16
 description: "From intern to TikTok Android Client Infra engineer: reflections on builds, reliability, efficiency, and a year of work and learning."
-tags: [build, life]
+tags: [build system, life]
 wip: true
 ---
 
