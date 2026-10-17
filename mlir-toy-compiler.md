@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "[WIP] MLIR: Understanding and Using Dialects and Operations"
+title: "MLIR: Understanding and Using Dialects and Operations"
 date: 2026-10-17
 description: Following the MLIR Toy tutorial to understand dialects, operations, and TableGen, starting with a dialect named zl and connecting the pieces with CMake.
 tags: [mlir, compiler]
