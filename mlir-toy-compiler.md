@@ -1,4 +1,11 @@
-# MLIR: Dialect 和 Operation 的简单理解和使用
+---
+layout: post
+title: "MLIR: Dialect 和 Operation 的简单理解和使用"
+date: 2026-10-17
+description: 跟着 MLIR Toy 教程，从一个叫 zl 的 dialect 开始，理解 Dialect、Operation 与 TableGen，并用 CMake 把它们串起来。
+tags: [mlir, compiler]
+wip: true
+---
 
 > 参考：https://mlir.llvm.org/docs/Tutorials/Toy 进行实践，主要目的是学习 MLIR 写法和底层原理，[纯手写代码仓库](https://github.com/xiongzile/mlir-toy-zl) 
 >

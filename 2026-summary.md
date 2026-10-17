@@ -1,4 +1,11 @@
-# [WIP] 2026 年度总结
+---
+layout: post
+title: 2026 年度总结
+date: 2026-10-16
+description: 从实习生到 TikTok Android Client Infra 工程师，聊聊构建、稳定与高效，以及这一年工作和学习中的一些思考。
+tags: [build, life]
+wip: true
+---
 
 ## 闲聊
 

@@ -1,0 +1,24 @@
+---
+layout: null
+---
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="{{ site.lang }}">
+  <title>{{ site.title | xml_escape }}</title>
+  <subtitle>{{ site.description | xml_escape }}</subtitle>
+  <link href="{{ '/feed.xml' | absolute_url }}" rel="self"/>
+  <link href="{{ '/' | absolute_url }}"/>
+  <id>{{ '/' | absolute_url }}</id>
+  {% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' | reverse %}
+  <updated>{% if articles.size > 0 %}{{ articles.first.date | date_to_xmlschema }}{% else %}{{ site.time | date_to_xmlschema }}{% endif %}</updated>
+  <author><name>{{ site.author | xml_escape }}</name></author>
+  {% for article in articles limit: 20 %}
+  <entry>
+    <title>{{ article.title | xml_escape }}</title>
+    <link href="{{ article.url | absolute_url }}"/>
+    <id>{{ article.url | absolute_url }}</id>
+    <published>{{ article.date | date_to_xmlschema }}</published>
+    <updated>{{ article.date | date_to_xmlschema }}</updated>
+    <summary>{{ article.description | xml_escape }}</summary>
+  </entry>
+  {% endfor %}
+</feed>

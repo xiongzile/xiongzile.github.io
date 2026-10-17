@@ -1,0 +1,20 @@
+---
+layout: page
+title: 标签
+nav: tags
+---
+{% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' | reverse %}
+{% assign all_tags = articles | map: 'tags' | join: ',' | split: ',' | uniq | sort %}
+<div class="tag-index">
+  {% for tag in all_tags %}<a href="#{{ tag | slugify }}">{{ tag | escape }}</a>{% endfor %}
+</div>
+{% for tag in all_tags %}
+<section class="tag-section" aria-labelledby="{{ tag | slugify }}">
+  <h2 id="{{ tag | slugify }}">{{ tag | escape }}</h2>
+  <ul class="tag-posts">
+    {% for article in articles %}
+      {% if article.tags contains tag %}<li><a href="{{ article.url | relative_url }}">{{ article.title | escape }}</a><time datetime="{{ article.date | date: '%Y-%m-%d' }}">{{ article.date | date: '%Y-%m-%d' }}</time></li>{% endif %}
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
