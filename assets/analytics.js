@@ -6,6 +6,7 @@
   const svgNS = 'http://www.w3.org/2000/svg';
   const set = (id, value) => { document.getElementById(id).textContent = value; };
   const sum = days => days.reduce((total, day) => total + day.views, 0);
+  const shortDate = value => new Date(`${value}T00:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const svg = (tag, attrs, text) => {
     const node = document.createElementNS(svgNS, tag);
     Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
@@ -19,27 +20,52 @@
     return node;
   };
 
-  function render(days, range) {
-    const visible = range ? days.slice(-range) : days;
+  function drawChart(visible) {
     const chart = document.getElementById('analytics-chart');
+    const width = Math.max(260, chart.clientWidth);
+    const height = chart.clientHeight;
+    const left = 32, right = width - 10, top = 12, bottom = height - 27;
+    chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
     chart.querySelectorAll('g').forEach(node => node.remove());
     const group = svg('g', {});
-    const max = Math.max(1, ...visible.map(day => day.views));
-    const width = 820 / visible.length;
-    group.append(svg('line', { x1: 45, y1: 205, x2: 875, y2: 205, class: 'axis' }));
-    group.append(svg('text', { x: 5, y: 22 }, number.format(max)));
-    group.append(svg('text', { x: 25, y: 205 }, '0'));
-    visible.forEach((day, i) => {
-      const height = day.views / max * 180;
-      const bar = svg('rect', { x: 50 + i * width, y: 205 - height, width: Math.max(0.5, width * 0.75), height, class: 'bar' });
-      bar.append(svg('title', {}, `${day.date}: ${number.format(day.views)} page views`));
-      group.append(bar);
+    const maximum = Math.max(2, ...visible.map(day => day.views));
+    const max = maximum <= 10 ? Math.ceil(maximum / 2) * 2 : Math.ceil(maximum / 10) * 10;
+    [0, max / 2, max].forEach(value => {
+      const y = bottom - value / max * (bottom - top);
+      group.append(svg('line', { x1: left, y1: y, x2: right, y2: y, class: 'grid' }));
+      group.append(svg('text', { x: left - 10, y: y + 4, 'text-anchor': 'end' }, number.format(value)));
     });
-    group.append(svg('text', { x: 50, y: 233 }, visible[0].date));
-    group.append(svg('text', { x: 870, y: 233, 'text-anchor': 'end' }, visible[visible.length - 1].date));
+    const points = visible.map((day, i) => ({
+      x: visible.length === 1 ? (left + right) / 2 : left + i / (visible.length - 1) * (right - left),
+      y: bottom - day.views / max * (bottom - top), day
+    }));
+    if (points.length > 1) {
+      const line = points.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ');
+      group.append(svg('path', { d: `${line} L ${right} ${bottom} L ${left} ${bottom} Z`, class: 'area' }));
+      group.append(svg('path', { d: line, class: 'trend' }));
+    }
+    points.forEach(point => {
+      const hit = svg('circle', { cx: point.x, cy: point.y, r: visible.length > 60 ? 4 : 7, fill: 'transparent' });
+      hit.append(svg('title', {}, `${point.day.date}: ${number.format(point.day.views)} page views`));
+      group.append(hit);
+      if (visible.length <= 30) group.append(svg('circle', { cx: point.x, cy: point.y, r: visible.length === 1 ? 3.5 : 2.5, class: 'point', 'pointer-events': 'none' }));
+    });
+    if (visible.length === 1) {
+      group.append(svg('text', { x: points[0].x, y: height - 4, 'text-anchor': 'middle' }, shortDate(visible[0].date)));
+    } else {
+      group.append(svg('text', { x: left, y: height - 4 }, shortDate(visible[0].date)));
+      group.append(svg('text', { x: right, y: height - 4, 'text-anchor': 'end' }, shortDate(visible[visible.length - 1].date)));
+    }
     chart.append(group);
-    set('analytics-chart-desc', `${number.format(sum(visible))} page views over ${visible.length} ${visible.length === 1 ? 'day' : 'days'}. Daily values are available in the table below.`);
-    set('analytics-chart-caption', `${number.format(sum(visible))} page views in this period. Hover over a bar for its daily count.`);
+  }
+
+  function render(days, range) {
+    const visible = range ? days.slice(-range) : days;
+    const description = `${number.format(sum(visible))} page views over ${visible.length} ${visible.length === 1 ? 'day' : 'days'}.`;
+    set('analytics-chart-desc', `${description} Daily values are available in the table below.`);
+    set('analytics-chart-caption', description);
+    set('analytics-period', range ? `Last ${range} days` : 'All time');
+    drawChart(visible);
     const daily = document.getElementById('analytics-days');
     daily.replaceChildren();
     visible.slice().reverse().forEach(day => {
@@ -61,6 +87,7 @@
     });
     document.getElementById('analytics-popular-empty').hidden = rows.length > 0;
     document.getElementById('analytics-popular-table').hidden = rows.length === 0;
+    return visible;
   }
 
   fetch(root.dataset.source, { cache: 'no-cache' }).then(response => {
@@ -76,16 +103,22 @@
     const month = cutoff.toISOString().slice(0, 10);
     const days = data.days.slice().sort((a, b) => a.date.localeCompare(b.date));
     set('analytics-start', data.startedAt);
+    set('analytics-start-note', data.startedAt);
     set('analytics-total', number.format(sum(days)));
     set('analytics-month', number.format(sum(days.filter(day => day.date >= month))));
     set('analytics-today', number.format(sum(days.filter(day => day.date === today))));
     const updated = new Date(data.updatedAt);
     const stale = Date.now() - updated.getTime() > 24 * 60 * 60 * 1000;
-    status.textContent = `${stale ? 'Update delayed. Last successful update' : 'Last updated'}: ${updated.toLocaleString('en', { timeZone: 'UTC' })} UTC.`;
+    const stamp = updated.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' });
+    status.textContent = `${stale ? 'Update delayed · Last updated' : 'Updated'} ${stamp} UTC`;
     document.getElementById('analytics-results').hidden = false;
-    const selector = document.getElementById('analytics-range');
-    render(days, Number(selector.value));
-    selector.addEventListener('change', () => render(days, Number(selector.value)));
+    let visible = render(days, 30);
+    const buttons = root.querySelectorAll('[data-range]');
+    buttons.forEach(button => button.addEventListener('click', () => {
+      buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+      visible = render(days, Number(button.dataset.range));
+    }));
+    new ResizeObserver(() => drawChart(visible)).observe(document.getElementById('analytics-chart'));
   }).catch(() => {
     status.textContent = 'Statistics are temporarily unavailable. Please try again later.';
   });

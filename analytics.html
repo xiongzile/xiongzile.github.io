@@ -1,46 +1,63 @@
 ---
-layout: page
+layout: default
 title: Analytics
 permalink: /analytics/
 description: Public page-view totals, daily trends, and popular articles.
 ---
 <link rel="stylesheet" href="{{ '/assets/analytics.css' | relative_url }}">
-<div id="analytics" data-source="{{ '/assets/analytics.json' | relative_url }}">
-  <p>Page views since <span id="analytics-start">tracking began</span>. Updated every six hours.</p>
-  <p id="analytics-status" role="status">Loading statistics…</p>
-  <noscript><p>Enable JavaScript to view the dashboard, or <a href="{{ '/assets/analytics.json' | relative_url }}">read the data</a>.</p></noscript>
-  <div id="analytics-results" hidden>
-    <dl class="analytics-totals">
-      <div><dt>Total page views</dt><dd id="analytics-total"></dd></div>
-      <div><dt>Last 30 days</dt><dd id="analytics-month"></dd></div>
-      <div><dt>Today (UTC)</dt><dd id="analytics-today"></dd></div>
-    </dl>
-    <h2>Daily page views</h2>
-    <label for="analytics-range">Show</label>
-    <select id="analytics-range">
-      <option value="30">Last 30 days</option>
-      <option value="7">Last 7 days</option>
-      <option value="0">All time</option>
-    </select>
-    <figure class="analytics-chart">
-      <svg id="analytics-chart" viewBox="0 0 900 240" role="img" aria-labelledby="analytics-chart-title analytics-chart-desc">
-        <title id="analytics-chart-title">Daily page views</title>
-        <desc id="analytics-chart-desc"></desc>
-      </svg>
-      <figcaption id="analytics-chart-caption"></figcaption>
-    </figure>
-    <details>
-      <summary>Daily data</summary>
-      <div class="analytics-table"><table><thead><tr><th scope="col">Date (UTC)</th><th scope="col">Page views</th></tr></thead><tbody id="analytics-days"></tbody></table></div>
-    </details>
-    <h2>Popular articles</h2>
-    <p id="analytics-popular-empty" hidden>No article views in this period yet.</p>
-    <div class="analytics-table" id="analytics-popular-table">
-      <table><thead><tr><th scope="col">Article</th><th scope="col">Page views</th></tr></thead><tbody id="analytics-popular"></tbody></table>
+<main class="analytics-page">
+  <h1 class="title-container section-title bottom-divider">Analytics</h1>
+  <div id="analytics" data-source="{{ '/assets/analytics.json' | relative_url }}">
+    <div class="analytics-meta">
+      <p>Public traffic statistics <span aria-hidden="true">·</span> Since <span id="analytics-start">tracking began</span></p>
+      <p id="analytics-status" role="status">Loading statistics…</p>
     </div>
-    <p class="analytics-note">Source: Cloudflare Web Analytics. Counts include repeat page loads and may be estimated. Dates use UTC; today is incomplete. Statistics begin when tracking was enabled and do not include earlier traffic.</p>
+    <noscript><p>Enable JavaScript to view the dashboard, or <a href="{{ '/assets/analytics.json' | relative_url }}">read the data</a>.</p></noscript>
+    <div id="analytics-results" hidden>
+      <dl class="analytics-totals">
+        <div><dt>Total page views</dt><dd id="analytics-total"></dd></div>
+        <div><dt>Last 30 days</dt><dd id="analytics-month"></dd></div>
+        <div><dt>Today <span class="analytics-muted">/ UTC</span></dt><dd id="analytics-today"></dd></div>
+      </dl>
+      <section class="analytics-section" aria-labelledby="analytics-trend-title">
+        <div class="analytics-section-heading">
+          <h2 id="analytics-trend-title">Daily views</h2>
+          <div class="analytics-ranges" role="group" aria-label="Time range">
+            <button type="button" data-range="7" aria-pressed="false">7 days</button>
+            <button type="button" data-range="30" aria-pressed="true">30 days</button>
+            <button type="button" data-range="0" aria-pressed="false">All time</button>
+          </div>
+        </div>
+        <figure class="analytics-chart">
+          <svg id="analytics-chart" role="img" aria-labelledby="analytics-chart-title analytics-chart-desc">
+            <title id="analytics-chart-title">Daily page views</title>
+            <desc id="analytics-chart-desc"></desc>
+          </svg>
+          <figcaption id="analytics-chart-caption"></figcaption>
+        </figure>
+        <details class="analytics-daily-data">
+          <summary>View daily data</summary>
+          <div class="analytics-table"><table><thead><tr><th scope="col">Date / UTC</th><th scope="col">Views</th></tr></thead><tbody id="analytics-days"></tbody></table></div>
+        </details>
+      </section>
+      <section class="analytics-section" aria-labelledby="analytics-popular-title">
+        <div class="analytics-section-heading">
+          <h2 id="analytics-popular-title">Popular articles</h2>
+          <span id="analytics-period" class="analytics-muted">Last 30 days</span>
+        </div>
+        <p id="analytics-popular-empty" class="analytics-muted" hidden>No article views in this period yet.</p>
+        <div class="analytics-table" id="analytics-popular-table">
+          <table><thead><tr><th scope="col">Article</th><th scope="col">Views</th></tr></thead><tbody id="analytics-popular"></tbody></table>
+        </div>
+      </section>
+      <details class="analytics-about">
+        <summary>About these statistics</summary>
+        <p>Source: Cloudflare Web Analytics. Updated every six hours. Page views include repeat loads and may be estimated; they do not represent unique visitors. Dates use UTC and today is incomplete.</p>
+        <p>Tracking started on <span id="analytics-start-note"></span>. Earlier traffic is not included.</p>
+      </details>
+    </div>
   </div>
-</div>
+</main>
 {% assign articles = site.pages | where: 'layout', 'post' %}
 <script id="analytics-articles" type="application/json">{ {% for post in articles %}{{ post.url | jsonify }}: {{ post.title | jsonify }}{% unless forloop.last %},{% endunless %}{% endfor %} }</script>
 <script defer src="{{ '/assets/analytics.js' | relative_url }}"></script>
