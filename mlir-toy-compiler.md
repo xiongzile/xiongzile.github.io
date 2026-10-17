@@ -1,8 +1,8 @@
-# 基于 MLIR 开发一个 toy compiler
+# MLIR: Dialect 和 Operation 的简单理解和使用
 
-> 本文参考：https://mlir.llvm.org/docs/Tutorials/Toy 进行实践，主要目的是学习 MLIR 写法和底层原理，[纯手写代码仓库](https://github.com/xiongzile/mlir-toy-zl) 本文不会对编译原理基础部分做探讨，默认读者知道 Lexer 和 AST 怎么写，因此重心在怎么复用 LLVM/MLIR 的基础设施构建一个编译器
+> 参考：https://mlir.llvm.org/docs/Tutorials/Toy 进行实践，主要目的是学习 MLIR 写法和底层原理，[纯手写代码仓库](https://github.com/xiongzile/mlir-toy-zl) 
 >
-> 和官方教程的主要区别是会讲代码的细节和使用上容易踩坑的点，视角更小，要理解 MLIR 设计应该参考官方文档
+> 本文主要了解 MLIR 的基本概念，以及引入 MLIR 相关依赖的基本配置
 
 ## Dialect
 
@@ -126,7 +126,7 @@ Operation 是 Dialect 的灵魂，没有 Op 的 Dialect 就是一个命名空间
 include "mlir/IR/OpBase.td"
 ```
 
-然后基于它的 class Op<XX...> 声明我们的 Op 即可，参考代码（这里几乎照抄官方示例，它多套了一层，对 Op 做了个继承然后基于继承后的类声明：
+然后基于它的 class Op<XX...> 声明我们的 Op 即可，参考代码：
 
 ```cpp
 // Base class for zl dialect operations. This operation inherits from the base
@@ -167,11 +167,113 @@ def ConstantOp : Zl_OP<"constant"> {
 }
 ```
 
+这里需要重点关注的就是 
+
+- arguments
+- results
+
+比如这里的 constant op，返回一个 F64 的 tensor，就是它的 results
+
+MLIR 的 op arguments 语义不单单指操作数，比如这里他是一个 attr； attr 的内容是表示我们返回的 tensor 形状
+
+基于我们给的 arguments 和 results，生成代码中会有一个这样的构造函数:
+
+```cpp
+static ConstantOp create(::mlir::OpBuilder &builder, ::mlir::Location location, ::mlir::Type resultType0, ::mlir::DenseElementsAttr value);
+```
+
+参数的顺序是 results 在前，arguments 在后，生成代码的 arguments 部分的内部顺序和 arguments 严格保持一致
+
+这里的的语法是：
+
+```cpp
+let arguments = (ins type1:$value1, type2:$value2);
+```
+
+这里的 arguments 类型是 dag（有向无环图），是 tablegen 内置的类型
+
+dag 的声明就是 (operation operand1 operand2) 这里我们写的 ins 是 mlir-tablegen 规定的 dag 操作符，所以需要这么写
+
+results 同理
+
+这里的 type（更准确来说是 constraints) 不是随便写的，可以在这两个文件里面查，查到有定义的才可以写：
+
+```cpp
+mlir/include/mlir/IR/CommonTypeConstraints.td
+mlir/include/mlir/IR/CommonAttrConstraints.td
+```
+
+比如我们刚写的 attr 就可以找到对应的声明行：
+
+```cpp
+def F64ElementsAttr : FloatElementsAttr<64>;
+```
+
+## CMake 引入依赖
+
+问题的本质是要在我们的编译流程里加入“基于 td 生成 cpp 和 h 文件，然后让原工程依赖这些文件”。如果用 Gradle 之类的构建工具是非常简单的，但是用 Cmake 就比较麻烦了。索性 LLVM 对外提供了一套好用的 Cmake 函数，让我们可以比较简单的基于 Cmake 开发 MLIR 编译器，这是我的 cmake 脚本参考：
+
+主要步骤为：
+
+- 注入 MLIR_DIR 和 LLVM_DIR 路径声明
+- 使用 find_package 导入 MLIR 依赖
+- 使用 include 导入 MLIR 相关 cmake 配置函数
+- 使用 mlir_tablegen 配置代码生成相关的参数和 target
+- 将生成代码添加为依赖
+- 将 MLIR 添加为依赖
+
+```
+cmake_minimum_required(VERSION 3.31)
+project(toy_mlir LANGUAGES CXX C)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(MLIR REQUIRED CONFIG)
+
+message(STATUS "Using MLIRConfig.cmake in: ${MLIR_DIR}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+
+include(AddLLVM)
+include(AddMLIR)
+include(HandleLLVMOptions)
+
+add_definitions(${LLVM_DEFINITIONS})
+include_directories(${LLVM_INCLUDE_DIRS} ${MLIR_INCLUDE_DIRS})
+set(LLVM_TARGET_DEFINITIONS include/ZLDialect.td)
+mlir_tablegen(ZLDialect.h.inc      -gen-dialect-decls)
+mlir_tablegen(ZLDialect.cpp.inc    -gen-dialect-defs)
+mlir_tablegen(ZLOps.h.inc          -gen-op-decls)
+mlir_tablegen(ZLOps.cpp.inc        -gen-op-defs)
+add_public_tablegen_target(ZLDialectIncGen)
+
+add_executable(toy_mlir
+        compiler.cpp
+        Lexer.h
+        AST.h
+        mlir/MlirGen.cpp
+        mlir/MlirGen.h
+        include/ZLDialect.h
+        mlir/ZLDialect.cpp
+)
+
+add_dependencies(toy_mlir ZLDialectIncGen)
 
 
+target_include_directories(toy_mlir SYSTEM PRIVATE
+        ${LLVM_INCLUDE_DIRS}
+        ${MLIR_INCLUDE_DIRS})
+target_include_directories(toy_mlir PRIVATE
+        include
+        ${CMAKE_CURRENT_BINARY_DIR})
+# generated *.inc land here
+target_link_libraries(toy_mlir PRIVATE MLIRIR)
 
+llvm_update_compile_flags(toy_mlir)
+mlir_check_all_link_libraries(toy_mlir)
 
-
-
-
+```
 
