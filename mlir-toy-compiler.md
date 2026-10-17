@@ -280,3 +280,10 @@ mlir_check_all_link_libraries(toy_mlir)
 
 ```
 
+## Next Steps
+
+Now I understand what MLIR is and know how to integrate it in my compiler.
+
+So my next plan is to emit the MLIR with the AST provided.
+
+Maybe I'll write a new blog to introduce the structure ``MLIRContext`` if it's interesting enough.
