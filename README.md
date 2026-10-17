@@ -1,29 +1,35 @@
 # Zile Xiong's blog
 
-Markdown 文章通过 Jekyll 生成，兼容 GitHub Pages 的默认构建方式。视觉参考 [MaskRay](https://maskray.me/) 使用的 tabi 阅读布局；主题模板和样式保存在本仓库中。
+An English-language blog built with Jekyll and compatible with GitHub Pages' default build process.
 
-## 本地预览
+The site uses the stylesheets, fonts, theme controls, and HTML structure served by [MaskRay's blog](https://maskray.me/blog/), with Jekyll templates supplying this site's content. See [THEME.md](THEME.md) for sources, checksums, and the small adaptations needed for Jekyll.
+
+## Local preview
 
 ```sh
 bundle install
 bundle exec jekyll serve --host 127.0.0.1
 ```
 
-打开 http://127.0.0.1:4000。执行 `bundle exec jekyll build` 生成 `_site/`。
+Open http://127.0.0.1:4000. Run `bundle exec jekyll build` to generate `_site/`.
 
-## 写文章
+## Writing a post
 
-在根目录添加 Markdown 文件，使用以下 front matter；首页、归档、标签和 RSS 会自动收录。
+Add a Markdown file at the repository root with the following front matter. The home page, archives, tag counts, and Atom feed will include it automatically.
 
 ```yaml
 ---
 layout: post
-title: 文章标题
+title: Post title
 date: 2026-10-17
-description: 一段用于首页和 RSS 的摘要。
+description: A short summary for the home page and Atom feed.
 tags: [compiler]
 wip: true
 ---
 ```
 
-正文从二级标题开始，文章标题由模板显示。现有文章仍使用 `/mlir-toy-compiler.html` 和 `/2026-summary.html`。
+Start the body with second-level headings; the template displays the post title and generates its table of contents. Prefix the title with `[WIP]` for an unfinished post.
+
+For a new tag, add a matching file under `_topics/` using one of the existing files as a template. Jekyll generates its page at `/tags/<tag>/`.
+
+The existing post URLs remain `/mlir-toy-compiler.html` and `/2026-summary.html`.

@@ -1,0 +1,70 @@
+{
+  "retrieved": "2026-10-17",
+  "assets": [
+    {
+      "path": "css/maskray.css",
+      "source": "https://maskray.me/blog/css/maskray.css",
+      "sha256": "df873246d423d1759c1ccb58dca133efb42b2a988971f69089345b8a6175c25a"
+    },
+    {
+      "path": "fonts/CascadiaCode-SemiLight.woff2",
+      "source": "https://maskray.me/blog/fonts/CascadiaCode-SemiLight.woff2",
+      "sha256": "5fea538e786dddea128305222d97cba2e3e97e0ca2bc3cbdec5ddf677e7ab0be"
+    },
+    {
+      "path": "fonts/Inter4.woff2",
+      "source": "https://maskray.me/blog/fonts/Inter4.woff2",
+      "sha256": "90db58a72bb3f1db0fa52b78ea9db30932153807159b78453e664e99f1ded8d8"
+    },
+    {
+      "path": "fonts/SourceSerif4Variable-Roman.ttf.woff2",
+      "source": "https://maskray.me/blog/fonts/SourceSerif4Variable-Roman.ttf.woff2",
+      "sha256": "7cbc7ea8cb0c77c59a5c7cc89aa6737ca45b8a3768963c58dd52a5d76d662b7e"
+    },
+    {
+      "path": "giallo.css",
+      "source": "https://maskray.me/blog/giallo.css",
+      "sha256": "9351ba503c4428849d3c5ee79588d9b566b4929740acfca0e7557576b7648146"
+    },
+    {
+      "path": "inter_subset_en.css",
+      "source": "https://maskray.me/blog/inter_subset_en.css",
+      "sha256": "d8cf4ad058d6c3a4015b94060d2881ab2ef5aa2ddf48fd0f3aa5f2940c7cf501"
+    },
+    {
+      "path": "js/copyCodeToClipboard.min.js",
+      "source": "https://maskray.me/blog/js/copyCodeToClipboard.min.js",
+      "sha256": "70f5f8c7f630ecda5ae40b7860cc93fc6bea40e3f715f26f3aab8cf3515bbf2e"
+    },
+    {
+      "path": "js/initializeTheme.min.js",
+      "source": "https://maskray.me/blog/js/initializeTheme.min.js",
+      "sha256": "5bdc6ad20a3c8cc2052c31d495a55359ac7b51247ad60b05f433b732ff282b3e"
+    },
+    {
+      "path": "js/themeSwitcher.min.js",
+      "source": "https://maskray.me/blog/js/themeSwitcher.min.js",
+      "sha256": "b5093e1640b65b5cf6d7900059843a486d0b768bf5e52e2f7c7b53934a416922"
+    },
+    {
+      "path": "main.css",
+      "source": "https://maskray.me/blog/main.css",
+      "sha256": "a0529235e6b8ecc8389e772934c73d7552a2d234384a44e4fddfc80c9c2c8340"
+    },
+    {
+      "path": "no_js.css",
+      "source": "https://maskray.me/blog/no_js.css",
+      "sha256": "a9b8a61d321c9c37a2219a5ccddc90a233e691d8081fd54dc64416e6bebf2a34"
+    },
+    {
+      "path": "social_icons/github.svg",
+      "source": "https://maskray.me/blog/social_icons/github.svg",
+      "sha256": "b5627f55bd0922e069e41bd9b493a46c99a2232cb6b0baed09a511f15e9739ac"
+    },
+    {
+      "path": "social_icons/rss.svg",
+      "source": "https://maskray.me/blog/social_icons/rss.svg",
+      "sha256": "96ecc4951cc91de1edf63a5ed52e7fd34707a61dc99c35fb1dc9c42e2b6c083e"
+    }
+  ]
+}

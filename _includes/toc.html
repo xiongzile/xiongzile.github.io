@@ -1,0 +1,13 @@
+{% assign sections = include.html | split: '<h2 id="' %}
+{% if sections.size > 1 %}
+<div class="toc-container">
+  <h3>Table of Contents</h3>
+  <ul>
+    {% for section in sections offset: 1 %}
+      {% assign anchor = section | split: '"' | first %}
+      {% assign heading = section | split: '</h2>' | first | remove_first: anchor | remove_first: '">' | strip_html %}
+      <li><a href="#{{ anchor }}">{{ heading }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}

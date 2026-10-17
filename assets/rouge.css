@@ -1,0 +1,7 @@
+/* Jekyll/Rouge token classes mapped to the original giallo.css github-dark palette.
+   Layout, type, spacing and code-block styling come from the unmodified tabi CSS. */
+.highlight .c, .highlight .c1, .highlight .cm, .highlight .cp, .highlight .cs { color: #6A737D; }
+.highlight .k, .highlight .kc, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kt, .highlight .o { color: #F97583; }
+.highlight .s, .highlight .s1, .highlight .s2, .highlight .sc, .highlight .se, .highlight .sh, .highlight .si, .highlight .sr, .highlight .ss { color: #9ECBFF; }
+.highlight .m, .highlight .mi, .highlight .mf, .highlight .mh, .highlight .nb, .highlight .nt { color: #79B8FF; }
+.highlight .nf, .highlight .nc { color: #B392F0; }

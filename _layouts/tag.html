@@ -1,0 +1,6 @@
+---
+layout: default
+---
+<h1 class="title-container section-title bottom-divider">{{ page.tag | escape }}</h1>
+{% assign articles = site.pages | where: 'layout', 'post' | where_exp: 'article', 'article.tags contains page.tag' | sort: 'date' | reverse %}
+{% include post-list.html articles=articles %}

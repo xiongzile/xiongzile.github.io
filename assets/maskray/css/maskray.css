@@ -1,0 +1,91 @@
+/* Wide tables scroll inside the column instead of being clipped (tabi's table has
+   overflow: hidden; https://github.com/MaskRay/maskray.me/discussions/24). */
+.e-content table {
+  display: block;
+  overflow-x: auto;
+  width: max-content;
+  max-width: 100%;
+}
+/* MathJax display math wider than the column scrolls too. */
+.e-content mjx-container[display="true"] {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Wider layout. tabi caps the column at 1000px with a 760px article (~75 characters per
+   line at its 20px serif), and drops to 600px below a 1000px viewport. Posts here are full
+   of tables, code and assembly, so let the column grow with the window up to 1280px and
+   give the article the whole column (~125 Latin or ~64 CJK characters per line). */
+:root {
+  --max-layout-width: 1280px;
+}
+article {
+  max-width: none;
+}
+@media only screen and (max-width: 1000px) {
+  .content,
+  .navbar {
+    max-width: none;
+  }
+}
+
+/* Side table of contents (like serene's). On wide screens the article becomes a grid: the
+   post in the first column, tabi's .toc-container pinned in a second one. Narrower screens
+   keep tabi's inline TOC under the title. */
+@media only screen and (min-width: 1400px) {
+  :root {
+    --max-layout-width: 1600px;
+  }
+  article {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    column-gap: 3rem;
+  }
+  article > * {
+    grid-column: 1;
+  }
+  article > .toc-container {
+    grid-column: 2;
+    grid-row: 1 / span 99;
+    align-self: start;
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+  article > .toc-container h3 {
+    font-size: 0.8rem;
+    margin-block: 0 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  article > .toc-container ul {
+    list-style: none;
+    margin: 0;
+    padding-inline-start: 0.8rem;
+  }
+  article > .toc-container > ul {
+    padding-inline-start: 0;
+  }
+  article > .toc-container li {
+    margin-block: 0.25rem;
+  }
+  article > .toc-container a {
+    color: var(--meta-color, inherit);
+    text-decoration: none;
+  }
+  article > .toc-container a.active {
+    color: var(--primary-color);
+    font-weight: 600;
+  }
+}
+
+/* tabi's .full-width (prev/next article bar) bleeds 6rem past the article on each side,
+   which assumed the 760px article; with the article filling the column it overflows. */
+article .full-width {
+  margin-inline: 0;
+  max-width: 100%;
+}

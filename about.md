@@ -1,10 +1,9 @@
 ---
 layout: page
-title: 关于
-nav: about
+title: About
 ---
 I'm Zile Xiong.
 
-这里记录我关于编译器、构建系统，以及工作和学习中的一些思考。
+I write about compilers, build systems, and things I learn through work and study.
 
-你可以在 [GitHub](https://github.com/xiongzile) 找到我，也可以通过 [RSS]({{ '/feed.xml' | relative_url }}) 订阅新文章。
+You can find me on [GitHub](https://github.com/xiongzile) or subscribe to new posts through the [Atom feed]({{ '/feed.xml' | relative_url }}).

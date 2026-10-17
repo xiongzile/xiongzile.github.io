@@ -1,0 +1,17 @@
+<div class="bloglist-container">
+  {% for article in include.articles %}
+  <section class="bloglist-meta bottom-divider">
+    <ul><li class="date">{% include date.html date=article.date %}</li></ul>
+  </section>
+  <section class="bloglist-content bottom-divider">
+    <div>
+      <h2 class="bloglist-title"><a href="{{ article.url | relative_url }}">{{ article.title | escape }}</a></h2>
+      <div class="bloglist-tags">
+        {% for tag in article.tags %}<a class="tag" href="{{ '/tags/' | append: tag | append: '/' | relative_url }}">{{ tag | escape }}</a>{% endfor %}
+      </div>
+      <div class="description"><p>{{ article.description | escape }}</p>…<p></p></div>
+      <a class="readmore" href="{{ article.url | relative_url }}">Read more&nbsp;<span class="arrow">→</span></a>
+    </div>
+  </section>
+  {% endfor %}
+</div>

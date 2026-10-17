@@ -1,18 +1,30 @@
 ---
 layout: default
 ---
-<article class="reading-width">
-  <header class="post-header">
-    <h1>{{ page.title | escape }}</h1>
-    <div class="post-meta">
-      <time datetime="{{ page.date | date: '%Y-%m-%d' }}">{{ page.date | date: '%Y 年 %-m 月 %-d 日' }}</time>
-      {% if page.wip %}<span class="meta-separator" aria-hidden="true">·</span><span>WIP · 持续更新中</span>{% endif %}
-    </div>
-    <div class="post-tags">{% for tag in page.tags %}<a href="{{ '/tags.html' | relative_url }}#{{ tag | slugify }}">{{ tag | escape }}</a>{% endfor %}</div>
-  </header>
-  <div class="prose">{{ content }}</div>
-  <footer class="post-footer">
-    <a href="{{ '/' | relative_url }}">← 所有文章</a>
-    <a href="https://github.com/xiongzile/xiongzile.github.io/blob/main/{{ page.path | uri_escape }}">查看原文 ↗</a>
-  </footer>
-</article>
+<main>
+  <article class="h-entry">
+    <h1 class="p-name article-title">{{ page.title | escape }}</h1>
+    <a class="u-url u-uid" href="{{ page.url | relative_url }}"></a>
+    {% assign words = content | strip_html | number_of_words %}
+    {% assign minutes = words | plus: 199 | divided_by: 200 %}
+    <ul class="meta">
+      <li><time class="dt-published" datetime="{{ page.date | date: '%Y-%m-%d' }}">{% include date.html date=page.date format='%b %Y' %}</time></li>
+      <li title="{{ words }} words"><span class="separator" aria-hidden="true">•</span>{{ minutes }} min read</li>
+      <li class="tag"><span class="separator" aria-hidden="true">•</span>Tags:&nbsp;</li>
+      {% for tag in page.tags %}<li class="tag"><a class="p-category" href="{{ '/tags/' | append: tag | append: '/' | relative_url }}">{{ tag | escape }}</a>{% unless forloop.last %},&nbsp;{% endunless %}</li>{% endfor %}
+    </ul>
+    {% include toc.html html=content %}
+    <section class="e-content body">{{ content | replace: '<pre class="highlight">', '<pre class="z-code">' }}</section>
+    {% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' %}
+    {% for article in articles %}
+      {% if article.url == page.url %}
+        {% assign previous_index = forloop.index0 | minus: 1 %}
+        {% assign next_index = forloop.index0 | plus: 1 %}
+        <nav class="full-width article-navigation">
+          <div>{% if previous_index >= 0 %}{% assign previous = articles[previous_index] %}<a href="{{ previous.url | relative_url }}" aria-label="Prev" aria-describedby="left_title"><span class="arrow">←</span>&nbsp;Prev</a><p aria-hidden="true" id="left_title">{{ previous.title | escape }}</p>{% endif %}</div>
+          <div>{% if next_index < articles.size %}{% assign next = articles[next_index] %}<a href="{{ next.url | relative_url }}" aria-label="Next" aria-describedby="right_title">Next&nbsp;<span class="arrow">→</span></a><p aria-hidden="true" id="right_title">{{ next.title | escape }}</p>{% endif %}</div>
+        </nav>
+      {% endif %}
+    {% endfor %}
+  </article>
+</main>

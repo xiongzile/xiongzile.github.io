@@ -1,17 +1,22 @@
 title: Zile Xiong
-description: 关于编译器、构建系统与日常思考的个人博客。
+description: Notes on compilers, build systems, and things I learn.
 url: https://xiongzile.github.io
 baseurl: ""
 author: Zile Xiong
-lang: zh-CN
+lang: en
 timezone: Asia/Shanghai
 markdown: kramdown
 highlighter: rouge
 kramdown:
   input: GFM
   syntax_highlighter: rouge
+collections:
+  topics:
+    output: true
+    permalink: /tags/:name/
 exclude:
   - Gemfile
   - Gemfile.lock
   - README.md
+  - THEME.md
   - vendor

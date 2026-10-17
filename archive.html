@@ -1,19 +1,24 @@
 ---
-layout: page
-title: 归档
-nav: archive
+layout: default
+title: Archives
 ---
-{% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' | reverse %}
-<p class="page-description">共 {{ articles.size }} 篇文章。</p>
-{% assign previous_year = '' %}
-{% for article in articles %}
-  {% assign year = article.date | date: '%Y' %}
-  {% if year != previous_year %}
-    {% unless forloop.first %}</ul>{% endunless %}
-    <h2 class="archive-year">{{ year }}</h2>
-    <ul class="archive-list">
-    {% assign previous_year = year %}
-  {% endif %}
-      <li><time datetime="{{ article.date | date: '%Y-%m-%d' }}">{{ article.date | date: '%m-%d' }}</time><a href="{{ article.url | relative_url }}">{{ article.title | escape }}</a>{% if article.wip %}<span class="wip-label">WIP</span>{% endif %}</li>
-  {% if forloop.last %}</ul>{% endif %}
-{% endfor %}
+<h1 class="title-container section-title bottom-divider">Archives</h1>
+<div class="archive">
+  <ul class="list-with-title">
+    {% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' | reverse %}
+    {% assign previous_year = '' %}
+    {% for article in articles %}
+      {% assign year = article.date | date: '%Y' %}
+      {% if year != previous_year %}
+        {% unless forloop.first %}</ul></li>{% endunless %}
+        <li><h2 class="listing-title">{{ year }}</h2><ul class="listing">
+        {% assign previous_year = year %}
+      {% endif %}
+      <li class="listing-item">
+        <div class="post-time"><span class="date">{{ article.date | date: '%d %b' }}</span></div>
+        <a href="{{ article.url | relative_url }}" title="{{ article.title | escape }}">{{ article.title | escape }}</a>
+      </li>
+      {% if forloop.last %}</ul></li>{% endif %}
+    {% endfor %}
+  </ul>
+</div>

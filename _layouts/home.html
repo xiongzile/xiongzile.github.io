@@ -1,22 +1,10 @@
 ---
 layout: default
-main_class: home-main
 ---
-<h1 class="page-title">Posts</h1>
-<div class="post-list">
-  {% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' | reverse %}
-  {% for article in articles %}
-  <article class="post-preview">
-    <time class="post-date" datetime="{{ article.date | date: '%Y-%m-%d' }}">{{ article.date | date: '%Y 年 %-m 月 %-d 日' }}</time>
-    <div class="post-preview-body">
-      <h2><a href="{{ article.url | relative_url }}">{{ article.title | escape }}</a></h2>
-      <div class="post-tags">
-        {% for tag in article.tags %}<a href="{{ '/tags.html' | relative_url }}#{{ tag | slugify }}">{{ tag | escape }}</a>{% endfor %}
-        {% if article.wip %}<span class="wip-label" title="持续更新中">WIP</span>{% endif %}
-      </div>
-      <p class="post-excerpt">{{ article.description | escape }}</p>
-      <a class="read-more" href="{{ article.url | relative_url }}" aria-label="阅读全文：{{ article.title | escape }}">阅读全文 <span aria-hidden="true">→</span></a>
-    </div>
-  </article>
-  {% endfor %}
-</div>
+<main>
+  <div id="posts-list">
+    <div><h1 class="title-container section-title bottom-divider">Posts</h1></div>
+    {% assign articles = site.pages | where: 'layout', 'post' | sort: 'date' | reverse %}
+    {% include post-list.html articles=articles %}
+  </div>
+</main>
