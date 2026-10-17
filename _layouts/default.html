@@ -29,6 +29,7 @@
           <li><a class="nav-links no-hover-padding" href="{{ '/archive.html' | relative_url }}">Archives</a></li>
           <li><a class="nav-links no-hover-padding" href="{{ '/tags.html' | relative_url }}">tags</a></li>
           <li><a class="nav-links no-hover-padding" href="{{ '/feeds/' | relative_url }}">Feeds</a></li>
+          <li><a class="nav-links no-hover-padding" href="{{ '/analytics/' | relative_url }}">Analytics</a></li>
           <li class="menu-icons-container">
             <ul class="menu-icons-group">
               <li class="theme-switcher-wrapper js">
@@ -67,5 +68,8 @@
       </div>
     </section>
   </footer>
+  {% if site.analytics.beacon_token %}
+  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":{{ site.analytics.beacon_token | jsonify }}}'></script>
+  {% endif %}
 </body>
 </html>

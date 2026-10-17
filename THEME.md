@@ -25,3 +25,7 @@ The Liquid layouts follow the live site's HTML classes and structure for the nav
 The active table-of-contents script follows MaskRay's live implementation. The footer identifies Jekyll as the generator because that is what this repository uses.
 
 The navigation omits Presentations and TIL as requested. MaskRay's personal social accounts, analytics, comment repository, and visitor statistics are not reused. The About page remains available at `/about.html`.
+
+The Analytics navigation item is a site-specific addition. Its public dashboard
+uses this site's own Cloudflare Web Analytics data and a separate stylesheet;
+the reference theme assets remain unchanged. See `ANALYTICS.md` for operation.

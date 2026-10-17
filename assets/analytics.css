@@ -1,0 +1,25 @@
+.analytics-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 4rem;
+  margin-block: 2rem;
+}
+.analytics-totals dt, .analytics-note, #analytics-status, .analytics-chart figcaption {
+  font-size: 0.85rem;
+}
+.analytics-totals dd {
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+.analytics-chart { display: block; width: 100%; margin: 1rem 0; }
+.analytics-chart figcaption { text-align: left; }
+.analytics-chart svg { display: block; width: 100%; height: auto; color: var(--primary-color); }
+.analytics-chart text { fill: currentColor; font: 13px sans-serif; }
+.analytics-chart .axis { stroke: currentColor; opacity: 0.3; }
+.analytics-chart .bar { fill: currentColor; }
+.analytics-table { overflow-x: auto; }
+.analytics-table table { width: 100%; }
+.analytics-table th:last-child, .analytics-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+#analytics-range { font: inherit; color: inherit; background: var(--bg-0, transparent); padding: 0.2rem; }
+#analytics [hidden] { display: none; }

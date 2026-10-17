@@ -5,6 +5,8 @@ baseurl: ""
 author: Zile Xiong
 lang: en
 timezone: Asia/Shanghai
+analytics:
+  beacon_token: 86dd927ea7b84fd2ad51f2dc875b3297
 markdown: kramdown
 highlighter: rouge
 kramdown:
@@ -15,6 +17,9 @@ collections:
     output: true
     permalink: /tags/:name/
 exclude:
+  - scripts
+  - analytics-config.json
+  - ANALYTICS.md
   - Gemfile
   - Gemfile.lock
   - README.md
