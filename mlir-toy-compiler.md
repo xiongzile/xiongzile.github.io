@@ -120,6 +120,53 @@ Operation 是 Dialect 的灵魂，没有 Op 的 Dialect 就是一个命名空间
 
 这样体感上 Cmake 好写一点，不过标准的工程肯定建议把两者分开
 
+写 Op 我们要在 td 中引入对应的基础 td 文件：
+
+```cpp
+include "mlir/IR/OpBase.td"
+```
+
+然后基于它的 class Op<XX...> 声明我们的 Op 即可，参考代码（这里几乎照抄官方示例，它多套了一层，对 Op 做了个继承然后基于继承后的类声明：
+
+```cpp
+// Base class for zl dialect operations. This operation inherits from the base
+// `Op` class in OpBase.td, and provides:
+//   * The parent dialect of the operation.
+//   * The mnemonic for the operation, or the name without the dialect prefix.
+//   * A list of traits for the operation.
+class Zl_OP<string mnemonic, list<Trait> traits = []> :
+    Op<Zl_Dialect, mnemonic, traits>;
+
+def ConstantOp : Zl_OP<"constant"> {
+  // Provide a summary and description for this operation. This can be used to
+  // auto-generate documentation of the operations within our dialect.
+  let summary = "constant operation";
+  let description = [{
+    Constant operation turns a literal into an SSA value. The data is attached
+    to the operation as an attribute. For example:
+
+      %0 = "zl.constant"()
+         { value = dense<[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]> : tensor<2x3xf64> }
+        : () -> tensor<2x3xf64>
+  }];
+
+  // The constant operation takes an attribute as the only input.
+  // `F64ElementsAttr` corresponds to a 64-bit floating-point ElementsAttr.
+  let arguments = (ins F64ElementsAttr:$value);
+
+  // The generic call operation returns a single value of TensorType.
+  // F64Tensor corresponds to a 64-bit floating-point TensorType.
+  let results = (outs F64Tensor);
+
+  // Add additional verification logic to the constant operation. Setting this bit
+  // to `1` will generate a `::llvm::LogicalResult verify()` declaration on the
+  // operation class that is called after ODS constructs have been verified, for
+  // example the types of arguments and results. We implement additional verification
+  // in the definition of this `verify` method in the C++ source file.
+  let hasVerifier = 1;
+}
+```
+
 
 
 
