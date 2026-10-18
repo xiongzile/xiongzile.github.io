@@ -11,6 +11,8 @@ wip: true
 >
 > This post covers basic MLIR concepts and the configuration needed to add MLIR dependencies.
 
+![image-20261018235244847](./assets/image-20261018235244847.png)
+
 ## Dialect
 
 A dialect in MLIR acts somewhat like a scope. For example, my compiler is called the zl compiler, so I named its dialect `zl`. The following TableGen definition generates a dialect:
