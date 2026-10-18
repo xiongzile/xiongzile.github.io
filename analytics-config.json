@@ -1,6 +1,6 @@
 {
   "accountId": "48523db3ec16f8a7897e02fe1237ee7e",
   "siteTag": "bbbd508d2a0f49a999d1a34720bc82b2",
-  "hostname": "xiongzile.com",
+  "hostnames": ["xiongzile.com", "xiongzile.me"],
   "startedAt": "2026-10-17"
 }

@@ -37,7 +37,7 @@ def fetch_day(token, config, day, now):
     start = dt.datetime.combine(day, dt.time(), dt.timezone.utc)
     end = min(start + dt.timedelta(days=1), now)
     filters = {"siteTag": config["siteTag"], "datetime_geq": start.isoformat(),
-               "datetime_lt": end.isoformat(), "requestHost": config["hostname"]}
+               "datetime_lt": end.isoformat(), "requestHost_in": config["hostnames"]}
     # JSON values also safely quote every interpolated GraphQL string.
     selector = ", ".join(f"{key}: {json.dumps(value)}" for key, value in filters.items())
     document = """{ viewer { accounts(filter: {accountTag: %s}) {

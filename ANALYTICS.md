@@ -12,9 +12,12 @@ then builds and deploys Jekyll through GitHub Pages. The Pages publishing source
 must be **GitHub Actions**. Scheduled jobs may run late; the page shows the last
 successful update and flags snapshots older than 24 hours.
 
-`analytics-config.json` contains only public account/site identifiers, hostname,
+`analytics-config.json` contains only public account/site identifiers, hostnames,
 and the date tracking started. The beacon token in `_config.yml` is a public
 site identifier, not an API credential. Keep the API token in Actions secrets.
+
+Both `xiongzile.com` and `xiongzile.me` are included in the query so that the
+domain migration retains historical views when recent days are refreshed.
 
 Only dates, paths, and page-view counts are exported. Popular articles are
 matched against this site's posts. Counts include repeat page loads; they do

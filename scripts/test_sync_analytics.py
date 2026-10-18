@@ -5,7 +5,7 @@ import sync_analytics as analytics
 
 
 class SnapshotTests(unittest.TestCase):
-    config = {"startedAt": "2026-10-01", "accountId": "account", "siteTag": "site", "hostname": "example.com"}
+    config = {"startedAt": "2026-10-01", "accountId": "account", "siteTag": "site", "hostnames": ["example.com", "example.me"]}
     now = dt.datetime(2026, 10, 18, 12, tzinfo=dt.timezone.utc)
 
     def test_refresh_recent_days_preserves_archive_and_fills_gaps(self):
@@ -24,8 +24,9 @@ class SnapshotTests(unittest.TestCase):
         answer = {"viewer": {"accounts": [{"total": [{"count": 3}], "pages": [
             {"count": 2, "dimensions": {"requestPath": "/post.html?private=1"}},
             {"count": 1, "dimensions": {"requestPath": "/post.html#fragment"}}]}]}}
-        with patch.object(analytics, "query", return_value=answer):
+        with patch.object(analytics, "query", return_value=answer) as query:
             day = analytics.fetch_day("unused", self.config, self.now.date(), self.now)
+        self.assertIn('requestHost_in: ["example.com", "example.me"]', query.call_args.args[1])
         self.assertEqual(day["pages"], [{"path": "/post.html", "views": 3}])
         answer["viewer"]["accounts"][0] = {"total": [], "pages": []}
         with patch.object(analytics, "query", return_value=answer):
