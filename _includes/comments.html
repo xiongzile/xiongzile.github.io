@@ -1,19 +1,10 @@
 <section class="comments" aria-labelledby="comments-title">
   <h2 class="comments-title" id="comments-title">Discussion</h2>
-  <p class="comments-status" role="status" aria-live="polite">Loading discussion…</p>
-  <script
-    src="https://utteranc.es/client.js"
-    repo="xiongzile/xiongzile.github.io"
-    issue-term="pathname"
-    theme="preferred-color-scheme"
-    crossorigin="anonymous"
-    async>
-  </script>
+  <p class="comments-status" role="status" aria-live="polite" hidden>Loading discussion…</p>
   <script>
     (() => {
       const section = document.currentScript.closest('.comments');
       const status = section.querySelector('.comments-status');
-      const client = section.querySelector('script[src*="utteranc.es/client.js"]');
       let timeout;
 
       const showError = () => {
@@ -22,27 +13,45 @@
         status.classList.add('comments-status-error');
       };
 
-      const watchFrame = (frame) => {
-        if (!frame || frame.dataset.loadingWatched) return;
-        frame.dataset.loadingWatched = 'true';
-        frame.addEventListener('load', () => {
-          window.clearTimeout(timeout);
-          status.remove();
-        }, { once: true });
-        frame.addEventListener('error', showError, { once: true });
+      const loadDiscussion = () => {
+        if (section.dataset.discussionStarted) return;
+        section.dataset.discussionStarted = 'true';
+        status.hidden = false;
+
+        const frameObserver = new MutationObserver(() => {
+          const frame = section.querySelector('.utterances-frame');
+          if (!frame) return;
+          frameObserver.disconnect();
+          frame.addEventListener('load', () => {
+            window.clearTimeout(timeout);
+            status.remove();
+          }, { once: true });
+          frame.addEventListener('error', showError, { once: true });
+        });
+        frameObserver.observe(section, { childList: true, subtree: true });
+
+        const client = document.createElement('script');
+        client.src = 'https://utteranc.es/client.js';
+        client.async = true;
+        client.crossOrigin = 'anonymous';
+        client.setAttribute('repo', 'xiongzile/xiongzile.github.io');
+        client.setAttribute('issue-term', 'pathname');
+        client.setAttribute('theme', 'preferred-color-scheme');
+        client.addEventListener('error', showError, { once: true });
+        timeout = window.setTimeout(showError, 15000);
+        section.append(client);
       };
 
-      const observer = new MutationObserver(() => {
-        const frame = section.querySelector('.utterances-frame');
-        if (!frame) return;
-        observer.disconnect();
-        watchFrame(frame);
-      });
-
-      observer.observe(section, { childList: true, subtree: true });
-      watchFrame(section.querySelector('.utterances-frame'));
-      timeout = window.setTimeout(showError, 15000);
-      client.addEventListener('error', showError, { once: true });
+      if ('IntersectionObserver' in window) {
+        const nearViewport = new IntersectionObserver((entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          nearViewport.disconnect();
+          loadDiscussion();
+        }, { rootMargin: '1200px 0px' });
+        nearViewport.observe(section);
+      } else {
+        loadDiscussion();
+      }
     })();
   </script>
 </section>

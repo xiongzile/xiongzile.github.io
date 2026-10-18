@@ -20,6 +20,10 @@
   font-size: 0.9rem;
 }
 
+.comments-status[hidden] {
+  display: none;
+}
+
 .comments-status:not(.comments-status-error)::before {
   width: 0.8rem;
   height: 0.8rem;
