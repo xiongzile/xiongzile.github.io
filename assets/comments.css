@@ -2,6 +2,7 @@
   margin-block-start: 3rem;
   padding-block-start: 1.25rem;
   border-top: 1px solid var(--divider-color);
+  text-align: left;
 }
 
 .comments-title {
