@@ -11,6 +11,11 @@
   font-size: 1.35rem;
 }
 
+.comments .utterances {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
 .comments-fallback {
   margin-block: 1rem 0;
   font-size: 0.9rem;
