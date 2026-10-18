@@ -9,3 +9,8 @@
   color: var(--text-color-high-contrast);
   font-size: 1.35rem;
 }
+
+.comments-fallback {
+  margin-block: 1rem 0;
+  font-size: 0.9rem;
+}
