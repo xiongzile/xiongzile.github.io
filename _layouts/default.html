@@ -18,8 +18,10 @@
   <link rel="stylesheet" href="{{ '/assets/maskray/css/maskray.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/rouge.css' | relative_url }}">
   <link rel="stylesheet" href="{{ '/assets/comments.css' | relative_url }}?v={{ site.time | date: '%s' }}">
+  <link rel="stylesheet" href="{{ '/assets/accent-theme.css' | relative_url }}">
   <noscript><link rel="stylesheet" href="{{ '/assets/maskray/no_js.css' | relative_url }}"></noscript>
   <script src="{{ '/assets/maskray/js/initializeTheme.min.js' | relative_url }}"></script>
+  <script src="{{ '/assets/accent-theme.js' | relative_url }}"></script>
   <script defer src="{{ '/assets/maskray/js/themeSwitcher.min.js' | relative_url }}"></script>
 </head>
 <body dir="ltr">
@@ -39,6 +41,7 @@
                 <div title="Toggle dark/light mode" class="theme-switcher" tabindex="0" role="button" aria-label="Toggle dark mode" aria-pressed="false"></div>
                 <div title="Reset mode to default" class="theme-resetter arrow" tabindex="0" role="button" aria-hidden="true" aria-label="Reset mode to default"></div>
               </li>
+              {% include accent-picker.html %}
             </ul>
           </li>
         </ul>
