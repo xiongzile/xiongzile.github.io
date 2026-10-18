@@ -1,5 +1,6 @@
 <section class="comments" aria-labelledby="comments-title">
-  <h2 class="comments-title" id="comments-title">Comments</h2>
+  <h2 class="comments-title" id="comments-title">Discussion</h2>
+  <p class="comments-status" role="status" aria-live="polite">Loading discussion…</p>
   <script
     src="https://utteranc.es/client.js"
     repo="xiongzile/xiongzile.github.io"
@@ -8,10 +9,40 @@
     crossorigin="anonymous"
     async>
   </script>
-  <p class="comments-fallback">
-    Having trouble loading the comment box?
-    <a href="https://github.com/xiongzile/xiongzile.github.io/issues/new?title=Comments%20on%20{{ page.title | uri_escape }}">
-      Start a discussion on GitHub
-    </a>.
-  </p>
+  <script>
+    (() => {
+      const section = document.currentScript.closest('.comments');
+      const status = section.querySelector('.comments-status');
+      const client = section.querySelector('script[src*="utteranc.es/client.js"]');
+      let timeout;
+
+      const showError = () => {
+        window.clearTimeout(timeout);
+        status.textContent = 'Discussion is taking longer than expected.';
+        status.classList.add('comments-status-error');
+      };
+
+      const watchFrame = (frame) => {
+        if (!frame || frame.dataset.loadingWatched) return;
+        frame.dataset.loadingWatched = 'true';
+        frame.addEventListener('load', () => {
+          window.clearTimeout(timeout);
+          status.remove();
+        }, { once: true });
+        frame.addEventListener('error', showError, { once: true });
+      };
+
+      const observer = new MutationObserver(() => {
+        const frame = section.querySelector('.utterances-frame');
+        if (!frame) return;
+        observer.disconnect();
+        watchFrame(frame);
+      });
+
+      observer.observe(section, { childList: true, subtree: true });
+      watchFrame(section.querySelector('.utterances-frame'));
+      timeout = window.setTimeout(showError, 15000);
+      client.addEventListener('error', showError, { once: true });
+    })();
+  </script>
 </section>

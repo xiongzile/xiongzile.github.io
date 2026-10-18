@@ -11,12 +11,36 @@
   font-size: 1.35rem;
 }
 
+.comments-status {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 1rem 0;
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
+
+.comments-status:not(.comments-status-error)::before {
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--divider-color);
+  border-top-color: var(--text-color-high-contrast);
+  border-radius: 50%;
+  content: "";
+  animation: comments-spin 0.8s linear infinite;
+}
+
+@keyframes comments-spin {
+  to { transform: rotate(360deg); }
+}
+
 .comments .utterances {
   margin-left: 0 !important;
   margin-right: auto !important;
 }
 
-.comments-fallback {
-  margin-block: 1rem 0;
-  font-size: 0.9rem;
+@media (prefers-reduced-motion: reduce) {
+  .comments-status:not(.comments-status-error)::before {
+    animation: none;
+  }
 }
