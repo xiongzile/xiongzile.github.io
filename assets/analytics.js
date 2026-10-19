@@ -5,7 +5,9 @@
   const articles = JSON.parse(document.getElementById('analytics-articles').textContent);
   const svgNS = 'http://www.w3.org/2000/svg';
   const set = (id, value) => { document.getElementById(id).textContent = value; };
-  const sum = days => days.reduce((total, day) => total + day.views, 0);
+  const metric = (day, key) => (typeof day[key] === 'number' ? day[key] : null);
+  const total = (days, key) => days.reduce((sum, day) => sum + (metric(day, key) || 0), 0);
+  const hasVisits = days => days.some(day => metric(day, 'visits') !== null);
   const shortDate = value => new Date(`${value}T00:00:00Z`).toLocaleDateString('en', { month: 'short', day: 'numeric', timeZone: 'UTC' });
   const svg = (tag, attrs, text) => {
     const node = document.createElementNS(svgNS, tag);
@@ -28,30 +30,38 @@
     chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
     chart.querySelectorAll('g').forEach(node => node.remove());
     const group = svg('g', {});
-    const maximum = Math.max(2, ...visible.map(day => day.views));
-    const max = maximum <= 10 ? Math.ceil(maximum / 2) * 2 : Math.ceil(maximum / 10) * 10;
+    const peak = Math.max(2, ...visible.map(day => metric(day, 'views') || 0), ...visible.map(day => metric(day, 'visits') || 0));
+    const max = peak <= 10 ? Math.ceil(peak / 2) * 2 : Math.ceil(peak / 10) * 10;
     [0, max / 2, max].forEach(value => {
       const y = bottom - value / max * (bottom - top);
       group.append(svg('line', { x1: left, y1: y, x2: right, y2: y, class: 'grid' }));
       group.append(svg('text', { x: left - 10, y: y + 4, 'text-anchor': 'end' }, number.format(value)));
     });
-    const points = visible.map((day, i) => ({
-      x: visible.length === 1 ? (left + right) / 2 : left + i / (visible.length - 1) * (right - left),
-      y: bottom - day.views / max * (bottom - top), day
-    }));
-    if (points.length > 1) {
-      const line = points.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ');
+    const xAt = index => visible.length === 1 ? (left + right) / 2 : left + index / (visible.length - 1) * (right - left);
+    const yAt = value => bottom - value / max * (bottom - top);
+    const views = visible.map((day, index) => ({ x: xAt(index), y: yAt(metric(day, 'views') || 0), day }));
+    if (views.length > 1) {
+      const line = views.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ');
       group.append(svg('path', { d: `${line} L ${right} ${bottom} L ${left} ${bottom} Z`, class: 'area' }));
       group.append(svg('path', { d: line, class: 'trend' }));
     }
-    points.forEach(point => {
+    const visits = visible.map((day, index) => ({ x: xAt(index), y: metric(day, 'visits'), day }))
+      .filter(point => point.y !== null)
+      .map(point => ({ ...point, y: yAt(point.y) }));
+    if (visits.length > 1) {
+      group.append(svg('path', { d: visits.map((point, i) => `${i ? 'L' : 'M'} ${point.x} ${point.y}`).join(' '), class: 'trend-visits' }));
+    } else if (visits.length === 1) {
+      group.append(svg('circle', { cx: visits[0].x, cy: visits[0].y, r: 2.5, class: 'trend-visits', fill: 'var(--meta-color)', stroke: 'none' }));
+    }
+    views.forEach(point => {
       const hit = svg('circle', { cx: point.x, cy: point.y, r: visible.length > 60 ? 4 : 7, fill: 'transparent' });
-      hit.append(svg('title', {}, `${point.day.date}: ${number.format(point.day.views)} page views`));
+      const value = metric(point.day, 'visits');
+      hit.append(svg('title', {}, `${point.day.date}: ${number.format(metric(point.day, 'views') || 0)} page views${value === null ? '' : `, ${number.format(value)} visits`}`));
       group.append(hit);
       if (visible.length <= 30) group.append(svg('circle', { cx: point.x, cy: point.y, r: visible.length === 1 ? 3.5 : 2.5, class: 'point', 'pointer-events': 'none' }));
     });
     if (visible.length === 1) {
-      group.append(svg('text', { x: points[0].x, y: height - 4, 'text-anchor': 'middle' }, shortDate(visible[0].date)));
+      group.append(svg('text', { x: views[0].x, y: height - 4, 'text-anchor': 'middle' }, shortDate(visible[0].date)));
     } else {
       group.append(svg('text', { x: left, y: height - 4 }, shortDate(visible[0].date)));
       group.append(svg('text', { x: right, y: height - 4, 'text-anchor': 'end' }, shortDate(visible[visible.length - 1].date)));
@@ -59,9 +69,14 @@
     chart.append(group);
   }
 
-  function render(days, range) {
+  function render(days, range, anyVisits) {
     const visible = range ? days.slice(-range) : days;
-    const description = `${number.format(sum(visible))} page views over ${visible.length} ${visible.length === 1 ? 'day' : 'days'}.`;
+    const views = total(visible, 'views');
+    const visits = total(visible, 'visits');
+    const span = `${visible.length} ${visible.length === 1 ? 'day' : 'days'}`;
+    const description = anyVisits
+      ? `${number.format(views)} page views and ${number.format(visits)} visits over ${span}.`
+      : `${number.format(views)} page views over ${span}.`;
     set('analytics-chart-desc', `${description} Daily values are available in the table below.`);
     set('analytics-chart-caption', description);
     set('analytics-period', range ? `Last ${range} days` : 'All time');
@@ -70,7 +85,10 @@
     daily.replaceChildren();
     visible.slice().reverse().forEach(day => {
       const row = document.createElement('tr');
-      cell(row, day.date); cell(row, number.format(day.views)); daily.append(row);
+      const visitsForDay = metric(day, 'visits');
+      cell(row, day.date); cell(row, number.format(metric(day, 'views') || 0));
+      cell(row, visitsForDay === null ? '—' : number.format(visitsForDay));
+      daily.append(row);
     });
     const popular = new Map();
     visible.forEach(day => day.pages.forEach(page => {
@@ -102,21 +120,31 @@
     const cutoff = new Date(`${today}T00:00:00Z`); cutoff.setUTCDate(cutoff.getUTCDate() - 29);
     const month = cutoff.toISOString().slice(0, 10);
     const days = data.days.slice().sort((a, b) => a.date.localeCompare(b.date));
+    const anyVisits = hasVisits(days);
+    const within = key => days.filter(day => key(day));
     set('analytics-start', data.startedAt);
     set('analytics-start-note', data.startedAt);
-    set('analytics-total', number.format(sum(days)));
-    set('analytics-month', number.format(sum(days.filter(day => day.date >= month))));
-    set('analytics-today', number.format(sum(days.filter(day => day.date === today))));
+    set('analytics-views-total', number.format(total(days, 'views')));
+    set('analytics-views-month', number.format(total(within(day => day.date >= month), 'views')));
+    set('analytics-views-today', number.format(total(within(day => day.date === today), 'views')));
+    if (anyVisits) {
+      set('analytics-visits-total', number.format(total(days, 'visits')));
+      set('analytics-visits-month', number.format(total(within(day => day.date >= month), 'visits')));
+      set('analytics-visits-today', number.format(total(within(day => day.date === today), 'visits')));
+    } else {
+      ['analytics-visits-total', 'analytics-visits-month', 'analytics-visits-today'].forEach(id => set(id, '—'));
+      document.getElementById('analytics-visits-legend').hidden = true;
+    }
     const updated = new Date(data.updatedAt);
     const stale = Date.now() - updated.getTime() > 24 * 60 * 60 * 1000;
     const stamp = updated.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' });
     status.textContent = `${stale ? 'Update delayed · Last updated' : 'Updated'} ${stamp} UTC`;
     document.getElementById('analytics-results').hidden = false;
-    let visible = render(days, 30);
+    let visible = render(days, 30, anyVisits);
     const buttons = root.querySelectorAll('[data-range]');
     buttons.forEach(button => button.addEventListener('click', () => {
       buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-      visible = render(days, Number(button.dataset.range));
+      visible = render(days, Number(button.dataset.range), anyVisits);
     }));
     new ResizeObserver(() => drawChart(visible)).observe(document.getElementById('analytics-chart'));
   }).catch(() => {

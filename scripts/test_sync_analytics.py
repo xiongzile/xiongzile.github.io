@@ -11,7 +11,7 @@ class SnapshotTests(unittest.TestCase):
     def test_refresh_recent_days_preserves_archive_and_fills_gaps(self):
         previous = {"days": [{"date": f"2026-10-{day:02d}", "views": 9, "pages": []} for day in range(1, 18) if day != 5]}
         def fresh(token, config, day, now):
-            return {"date": day.isoformat(), "views": 2, "pages": []}
+            return {"date": day.isoformat(), "views": 2, "visits": 1, "pages": []}
         with patch.object(analytics, "fetch_day", side_effect=fresh) as fetch:
             result = analytics.sync("unused", self.config, previous, self.now)
         self.assertEqual(len(result["days"]), 18)
@@ -21,25 +21,34 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result["days"][-1]["views"], 2)
 
     def test_no_data_is_a_valid_zero_and_paths_are_sanitized(self):
-        answer = {"viewer": {"accounts": [{"total": [{"count": 3}], "pages": [
+        answer = {"viewer": {"accounts": [{"total": [{"count": 3, "sum": {"visits": 2}}], "pages": [
             {"count": 2, "dimensions": {"requestPath": "/post.html?private=1"}},
             {"count": 1, "dimensions": {"requestPath": "/post.html#fragment"}}]}]}}
         with patch.object(analytics, "query", return_value=answer) as query:
             day = analytics.fetch_day("unused", self.config, self.now.date(), self.now)
         self.assertIn('requestHost_in: ["example.com", "example.me"]', query.call_args.args[1])
         self.assertEqual(day["pages"], [{"path": "/post.html", "views": 3}])
+        self.assertEqual(day["visits"], 2)
         answer["viewer"]["accounts"][0] = {"total": [], "pages": []}
         with patch.object(analytics, "query", return_value=answer):
             self.assertEqual(analytics.fetch_day("unused", self.config, self.now.date(), self.now)["views"], 0)
 
     def test_truncated_or_failed_refresh_never_publishes_false_zero(self):
-        answer = {"viewer": {"accounts": [{"total": [{"count": 50}], "pages": []}]}}
+        answer = {"viewer": {"accounts": [{"total": [{"count": 50, "sum": {"visits": 10}}], "pages": []}]}}
         with patch.object(analytics, "query", return_value=answer):
             with self.assertRaises(RuntimeError):
                 analytics.fetch_day("unused", self.config, self.now.date(), self.now)
         with patch.object(analytics, "fetch_day", side_effect=RuntimeError("API unavailable")):
             with self.assertRaises(RuntimeError):
                 analytics.sync("unused", self.config, {"days": []}, self.now)
+
+
+    def test_visits_cannot_exceed_page_views(self):
+        answer = {"viewer": {"accounts": [{"total": [{"count": 10, "sum": {"visits": 40}}], "pages": [
+            {"count": 10, "dimensions": {"requestPath": "/post.html"}}]}]}}
+        with patch.object(analytics, "query", return_value=answer):
+            with self.assertRaises(RuntimeError):
+                analytics.fetch_day("unused", self.config, self.now.date(), self.now)
 
 
 if __name__ == "__main__":

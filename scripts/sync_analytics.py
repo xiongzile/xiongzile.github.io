@@ -41,7 +41,10 @@ def fetch_day(token, config, day, now):
     # JSON values also safely quote every interpolated GraphQL string.
     selector = ", ".join(f"{key}: {json.dumps(value)}" for key, value in filters.items())
     document = """{ viewer { accounts(filter: {accountTag: %s}) {
-      total: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {%s}) { count }
+      total: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {%s}) {
+        count
+        sum { visits }
+      }
       pages: rumPageloadEventsAdaptiveGroups(limit: 10000, filter: {%s}) {
         count dimensions { requestPath }
       }
@@ -54,9 +57,13 @@ def fetch_day(token, config, day, now):
     if len(pages) >= 10000:
         raise RuntimeError("Path result limit reached; refusing to publish truncated data")
     total = sum(row["count"] for row in result["total"])
+    visits = sum(row["sum"]["visits"] for row in result["total"])
     page_total = sum(row["count"] for row in pages)
     if not math.isclose(total, page_total, rel_tol=0.02, abs_tol=1):
         raise RuntimeError("Path totals differ from the independent daily total")
+    # A visit is an entry page load, so it can never outnumber page loads.
+    if visits > total * 1.02:
+        raise RuntimeError("Visit total exceeds the page-view total")
     aggregate = {}
     for row in pages:
         path = row["dimensions"]["requestPath"]
@@ -65,7 +72,7 @@ def fetch_day(token, config, day, now):
             continue
         path = path.split("?", 1)[0].split("#", 1)[0]
         aggregate[path] = aggregate.get(path, 0) + round(row["count"])
-    return {"date": day.isoformat(), "views": round(total), "pages": [
+    return {"date": day.isoformat(), "views": round(total), "visits": round(visits), "pages": [
         {"path": path, "views": views} for path, views in sorted(aggregate.items())]}
 
 
@@ -82,7 +89,7 @@ def sync(token, config, previous, now):
         if day.isoformat() not in existing or day >= today - dt.timedelta(days=6):
             existing[day.isoformat()] = fetch_day(token, config, day, now)
         day += dt.timedelta(days=1)
-    return {"schemaVersion": 1, "startedAt": start.isoformat(),
+    return {"schemaVersion": 2, "startedAt": start.isoformat(),
             "updatedAt": now.isoformat(), "days": [existing[key] for key in sorted(existing)]}
 
 

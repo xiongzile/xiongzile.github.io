@@ -2,7 +2,7 @@
 layout: default
 title: Analytics
 permalink: /analytics/
-description: Public page-view totals, daily trends, and popular articles.
+description: Public page-view and visit totals, daily trends, and popular articles.
 ---
 <link rel="stylesheet" href="{{ '/assets/analytics.css' | relative_url }}?v={{ site.time | date: '%s' }}">
 <main class="analytics-page">
@@ -15,29 +15,46 @@ description: Public page-view totals, daily trends, and popular articles.
     <noscript><p>Enable JavaScript to view the dashboard, or <a href="{{ '/assets/analytics.json' | relative_url }}">read the data</a>.</p></noscript>
     <div id="analytics-results" hidden>
       <dl class="analytics-totals">
-        <div><dt>Total page views</dt><dd id="analytics-total"></dd></div>
-        <div><dt>Last 30 days</dt><dd id="analytics-month"></dd></div>
-        <div><dt>Today <span class="analytics-muted">/ UTC</span></dt><dd id="analytics-today"></dd></div>
+        <div class="analytics-metric">
+          <dt>Page views</dt>
+          <dd id="analytics-views-total">—</dd>
+          <div class="analytics-breakdown">
+            <span><span class="analytics-label">Last 30 days</span> <span id="analytics-views-month">—</span></span>
+            <span><span class="analytics-label">Today <span class="analytics-muted">UTC</span></span> <span id="analytics-views-today">—</span></span>
+          </div>
+        </div>
+        <div class="analytics-metric">
+          <dt>Visits</dt>
+          <dd id="analytics-visits-total">—</dd>
+          <div class="analytics-breakdown">
+            <span><span class="analytics-label">Last 30 days</span> <span id="analytics-visits-month">—</span></span>
+            <span><span class="analytics-label">Today <span class="analytics-muted">UTC</span></span> <span id="analytics-visits-today">—</span></span>
+          </div>
+        </div>
       </dl>
       <section class="analytics-section" aria-labelledby="analytics-trend-title">
         <div class="analytics-section-heading">
-          <h2 id="analytics-trend-title">Daily views</h2>
+          <h2 id="analytics-trend-title">Daily traffic</h2>
           <div class="analytics-ranges" role="group" aria-label="Time range">
             <button type="button" data-range="7" aria-pressed="false">7 days</button>
             <button type="button" data-range="30" aria-pressed="true">30 days</button>
             <button type="button" data-range="0" aria-pressed="false">All time</button>
           </div>
         </div>
+        <p class="analytics-legend">
+          <span class="analytics-legend-item"><span class="analytics-swatch analytics-swatch-views" aria-hidden="true"></span>Page views</span>
+          <span class="analytics-legend-item" id="analytics-visits-legend"><span class="analytics-swatch analytics-swatch-visits" aria-hidden="true"></span>Visits</span>
+        </p>
         <figure class="analytics-chart">
           <svg id="analytics-chart" role="img" aria-labelledby="analytics-chart-title analytics-chart-desc">
-            <title id="analytics-chart-title">Daily page views</title>
+            <title id="analytics-chart-title">Daily page views and visits</title>
             <desc id="analytics-chart-desc"></desc>
           </svg>
           <figcaption id="analytics-chart-caption"></figcaption>
         </figure>
         <details class="analytics-daily-data">
           <summary>View daily data</summary>
-          <div class="analytics-table"><table><thead><tr><th scope="col">Date / UTC</th><th scope="col">Views</th></tr></thead><tbody id="analytics-days"></tbody></table></div>
+          <div class="analytics-table"><table><thead><tr><th scope="col">Date <span class="analytics-muted">UTC</span></th><th scope="col">Views</th><th scope="col">Visits</th></tr></thead><tbody id="analytics-days"></tbody></table></div>
         </details>
       </section>
       <section class="analytics-section" aria-labelledby="analytics-popular-title">
@@ -52,8 +69,9 @@ description: Public page-view totals, daily trends, and popular articles.
       </section>
       <details class="analytics-about">
         <summary>About these statistics</summary>
-        <p>Source: Cloudflare Web Analytics. Updated every six hours. Page views include repeat loads and may be estimated; they do not represent unique visitors. Dates use UTC and today is incomplete.</p>
-        <p>Tracking started on <span id="analytics-start-note"></span>. Earlier traffic is not included.</p>
+        <p><strong>Page views</strong> count every successful HTML response, including reloads and repeat visits by the same reader. <strong>Visits</strong> count page loads that came from another site or a direct link, so one visit can contain several page views. Neither number identifies people: there is no visitor deduplication, and neither is a unique-reader count.</p>
+        <p>Source: Cloudflare Web Analytics. Updated every six hours. Cloudflare may sample or round values, so read these as approximate and comparable over time rather than exact. Dates use UTC and today is incomplete.</p>
+        <p>Tracking started on <span id="analytics-start-note"></span>. Earlier traffic is not included, and visits are only available from the day this dashboard started recording them.</p>
       </details>
     </div>
   </div>
