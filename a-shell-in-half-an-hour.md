@@ -311,7 +311,7 @@ The second half walks the list to the matching entry and copies its `argv` back.
 
 Linked-list insertion and the small plumbing details. They are not the interesting part, and copying code from a blog into your editor tends to produce errors that have nothing to do with the idea. Everything here was written and tested on Linux with `vim`; the formatting may not survive a copy into Dev-C++.
 
-The full source is in [my shell repository](https://github.com/xiongzile/myshell).
+The full source is in [my shell repository](https://github.com/Arrtoria/shell/tree/master).
 
 ---
 

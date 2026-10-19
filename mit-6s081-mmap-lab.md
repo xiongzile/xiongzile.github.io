@@ -30,7 +30,7 @@ The lab description covers everything else. Do not skip any of it. Note that *Hi
 
 One more: do not use `filewrite` for write-back. You have to decide the file offset yourself.
 
-I am not going to explain how to add a system call to xv6. Copying the code here will not compile — the full source is [on GitHub](https://github.com/xiongzile/xv6-mmap).
+I am not going to explain how to add a system call to xv6. Copying the code here will not compile — the full source is [on GitHub](https://github.com/Withmm).
 
 The functions involved:
 
@@ -274,7 +274,7 @@ The last step is `exit` and `fork`: close the files and drop the VMAs on exit, a
 
 If you paid attention to the points above, debugging the rest is not hard.
 
-The complete implementation is [on GitHub](https://github.com/xiongzile/xv6-mmap), alongside a small C compiler if you are curious.
+The complete implementation is in [my GitHub repositories](https://github.com/Withmm), alongside a small C compiler if you are curious.
 
 ---
 
