@@ -11,7 +11,7 @@ wip: true
 >
 > This post covers basic MLIR concepts and the configuration needed to add MLIR dependencies.
 >
-> Very nice reference in Chinese: https://github.com/KEKE046/mlir-tutorial
+> [A very nice reference in Chinese](https://github.com/KEKE046/mlir-tutorial)
 
 ![image-20261018235244847](./assets/image-20261018235244847.png)
 
