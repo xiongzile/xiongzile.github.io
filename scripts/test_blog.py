@@ -80,6 +80,13 @@ class BlogCLITests(unittest.TestCase):
         self.assertIn("collision", errors)
         self.assertFalse((self.root / "other-notes.md").exists())
 
+    def test_new_cannot_take_over_an_existing_site_page_url(self):
+        (self.root / "tags.html").write_text("Existing tags page")
+        code, _, errors = self.cli("new", "Tags", "--no-open")
+        self.assertEqual(code, 1)
+        self.assertIn("already used", errors)
+        self.assertFalse((self.root / "tags.md").exists())
+
     def test_list_ignores_readme_examples_and_lists_real_articles(self):
         self.new()
         (self.root / "README.md").write_text("# Example\n```yaml\n---\nlayout: post\n---\n```\n")

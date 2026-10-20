@@ -118,6 +118,8 @@ def new_post(args):
     path = ROOT / (slug + ".md")
     if path.exists() or path.is_symlink():
         raise BlogError(f"{path.name} already exists. Use 'blog edit {slug}' or choose another --slug.")
+    if (ROOT / (slug + ".html")).exists():
+        raise BlogError(f"The URL name {slug!r} is already used by a site page. Choose another --slug.")
     tags = list(dict.fromkeys(tag.strip().lower() for tag in args.tag if tag.strip()))
     pages = tag_pages(tags)
     date = args.date or dt.datetime.now(ZoneInfo("Asia/Shanghai")).date().isoformat()
