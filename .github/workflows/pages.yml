@@ -22,7 +22,7 @@ jobs:
       pages: read
     steps:
       - uses: actions/checkout@v6
-      - name: Check analytics code
+      - name: Check blog tools and analytics code
         run: |
           python3 -m unittest discover -s scripts -p 'test_*.py'
           node --check assets/analytics.js
