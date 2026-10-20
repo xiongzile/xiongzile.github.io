@@ -36,18 +36,18 @@ jobs:
         if: steps.analytics.outcome == 'failure'
         run: echo '::warning::Analytics refresh failed. Publishing the previous snapshot with its original timestamp.'
       - uses: actions/configure-pages@v5
-      - uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
       - name: Record published revision
         run: |
           python3 - <<'PY'
           import json
           import os
           from pathlib import Path
-          Path('_site/assets/build-info.json').write_text(json.dumps({'commit': os.environ['GITHUB_SHA']}) + '\n')
+          Path('assets/build-info.json').write_text(json.dumps({'commit': os.environ['GITHUB_SHA']}) + '\n')
           PY
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
       - uses: actions/upload-pages-artifact@v4
 
   deploy:

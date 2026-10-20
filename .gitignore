@@ -4,5 +4,6 @@
 /.sass-cache/
 /.bundle/
 /vendor/
+/assets/build-info.json
 __pycache__/
 *.pyc
