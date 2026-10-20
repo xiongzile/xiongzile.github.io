@@ -13,6 +13,7 @@ import sys
 import time
 import unicodedata
 from urllib.parse import quote, unquote, urlsplit
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 from zoneinfo import ZoneInfo
 
@@ -246,30 +247,28 @@ def site_url():
 def wait_for_pages(sha, page_url, timeout):
     remote = git("remote", "get-url", "origin").stdout.strip()
     match = re.search(r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?$", remote)
-    if not match:
-        raise BlogError("Push succeeded, but origin is not a GitHub repository; deployment was not checked.")
-    repo = match[1]
-    actions = f"https://github.com/{repo}/actions"
-    api = f"https://api.github.com/repos/{repo}/actions/runs?head_sha={sha}&event=push&per_page=10"
-    deadline, previous = time.monotonic() + timeout, None
+    actions = f"https://github.com/{match[1]}/actions" if match else "the deployment logs"
+    deadline = time.monotonic() + timeout
+    last_error = "The live site still has an earlier version."
+    print("Waiting for the live site to update…", flush=True)
     while time.monotonic() < deadline:
+        # A fresh query also avoids cached 404s while the first deployment is running.
+        marker = f"{site_url()}/assets/build-info.json?revision={sha}&t={time.time_ns()}"
         try:
-            with urlopen(Request(api, headers={"User-Agent": "xiongzile-blog-cli", "Accept": "application/vnd.github+json"}), timeout=15) as response:
-                runs = json.load(response)["workflow_runs"]
-        except (OSError, ValueError, KeyError) as error:
-            raise BlogError(f"Push succeeded, but deployment could not be checked. See {actions}\n{error}") from error
-        run = next((item for item in runs if item.get("path") == ".github/workflows/pages.yml"), None)
-        state = run["status"] if run else "waiting for workflow"
-        if state != previous:
-            print(f"GitHub Pages: {state}", flush=True)
-            previous = state
-        if run and state == "completed":
-            if run["conclusion"] != "success":
-                raise BlogError(f"Push succeeded, but deployment {run['conclusion']}: {run['html_url']}")
-            print(f"Published: {page_url}")
-            return
-        time.sleep(10)
-    raise BlogError(f"Push succeeded; deployment is still pending. Check {actions}")
+            request = Request(marker, headers={"User-Agent": "xiongzile-blog-cli", "Cache-Control": "no-cache"})
+            with urlopen(request, timeout=15) as response:
+                info = json.loads(response.read(65536))
+            if isinstance(info, dict) and info.get("commit") == sha:
+                print(f"Published: {page_url}")
+                return
+            last_error = "The live site still has an earlier version."
+        except HTTPError as error:
+            last_error = str(error)
+            error.close()
+        except (OSError, ValueError) as error:
+            last_error = str(error)
+        time.sleep(min(10, max(0, deadline - time.monotonic())))
+    raise BlogError(f"Push succeeded, but the live update was not confirmed. Check {actions}\n{last_error}")
 
 
 def publish(args):

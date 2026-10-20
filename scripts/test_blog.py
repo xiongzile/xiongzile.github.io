@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 import blog
 
@@ -197,12 +198,23 @@ class BlogCLITests(unittest.TestCase):
             "assets/my screenshot (1).png", "assets/ref.png", "/assets/html.png", "https://example.com/image.png",
         })
 
-    def test_wait_reports_failed_deployment_after_push(self):
-        run = {"path": ".github/workflows/pages.yml", "status": "completed", "conclusion": "failure", "html_url": "https://github.com/owner/repo/actions/runs/1"}
-        response = io.StringIO(json.dumps({"workflow_runs": [run]}))
-        with patch.object(blog, "git", return_value=subprocess.CompletedProcess([], 0, "git@github.com:owner/repo.git\n", "")), patch.object(blog, "urlopen", return_value=response), contextlib.redirect_stdout(io.StringIO()):
-            with self.assertRaisesRegex(blog.BlogError, "Push succeeded, but deployment failure"):
-                blog.wait_for_pages("abc", "https://example.com/post.html", 60)
+    def test_wait_requires_exact_live_commit_and_tolerates_pending_site(self):
+        responses = [HTTPError("https://example.com", 404, "not deployed yet", {}, None),
+                     io.StringIO(json.dumps({"commit": "old"})),
+                     io.StringIO(json.dumps({"commit": "abc"}))]
+        output = io.StringIO()
+        with patch.object(blog, "urlopen", side_effect=responses) as fetch, patch.object(blog.time, "sleep"), contextlib.redirect_stdout(output):
+            blog.wait_for_pages("abc", "https://example.com/post.html", 60)
+        self.assertEqual(fetch.call_count, 3)
+        self.assertIn("Published: https://example.com/post.html", output.getvalue())
+        self.assertTrue(fetch.call_args.args[0].full_url.startswith("https://example.com/assets/build-info.json?revision=abc&"))
+
+    def test_wait_timeout_does_not_claim_that_a_push_is_live(self):
+        output = io.StringIO()
+        with patch.object(blog.time, "monotonic", side_effect=[0, 2]), contextlib.redirect_stdout(output):
+            with self.assertRaisesRegex(blog.BlogError, "Push succeeded, but the live update was not confirmed"):
+                blog.wait_for_pages("abc", "https://example.com/post.html", 1)
+        self.assertNotIn("Published:", output.getvalue())
 
 
 if __name__ == "__main__":

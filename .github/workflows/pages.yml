@@ -40,6 +40,14 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      - name: Record published revision
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          Path('_site/assets/build-info.json').write_text(json.dumps({'commit': os.environ['GITHUB_SHA']}) + '\n')
+          PY
       - uses: actions/upload-pages-artifact@v4
 
   deploy:

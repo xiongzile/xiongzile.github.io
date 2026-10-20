@@ -45,8 +45,9 @@ allow copying images to the document's configured folder.
 
 `blog publish` can omit the filename when exactly one article has changed. It
 checks that local images exist under `assets/`, commits the article, referenced
-images and matching tag pages, pushes `main`, and waits for the GitHub Pages
-workflow to succeed. Unrelated staged and working changes are preserved. If
+images and matching tag pages, pushes `main`, and waits until the live site's
+revision marker matches the pushed commit. No GitHub API token is needed.
+Unrelated staged and working changes are preserved. If
 the remote has new commits or local unpushed commits touch other files, it
 stops instead of rebasing or publishing them. Use `--no-wait` to return after
 the push; this does not confirm deployment. If a push fails, retry with the
