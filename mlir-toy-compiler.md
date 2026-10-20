@@ -10,6 +10,8 @@ wip: true
 > These notes follow the [MLIR Toy tutorial](https://mlir.llvm.org/docs/Tutorials/Toy/) to learn how to write MLIR code and understand the underlying mechanisms. [My hand-written implementation](https://github.com/xiongzile/mlir-toy-zl).
 >
 > This post covers basic MLIR concepts and the configuration needed to add MLIR dependencies.
+>
+> Very nice reference in Chinese: https://github.com/KEKE046/mlir-tutorial
 
 ![image-20261018235244847](./assets/image-20261018235244847.png)
 
