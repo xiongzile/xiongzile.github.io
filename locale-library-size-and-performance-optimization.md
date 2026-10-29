@@ -3,7 +3,7 @@ layout: post
 title: "Reducing the Size of a Multilingual C++ Library: From Global Initialization to Static Data"
 date: 2026-10-29
 description: "Investigating global object initialization in an oversized date and time formatting library, and compacting locale data while keeping O2."
-tags: ["compiler", "build system"]
+tags: ["Android", "C++"]
 typora-copy-images-to: assets/images/locale-library-size-and-performance-optimization
 ---
 
