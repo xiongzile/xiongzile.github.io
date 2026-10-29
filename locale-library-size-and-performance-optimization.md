@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Reducing the Size of a Multilingual C++ Library: From Global Initialization to Static Data"
+title: "Shrinking a C++ Locale Library"
 date: 2026-10-29
 description: "Investigating global object initialization in an oversized date and time formatting library, and compacting locale data while keeping O2."
 tags: ["Android", "C++"]
@@ -11,7 +11,7 @@ While recently optimizing a cross-platform date and time formatting SDK, I ran i
 
 The SDK essentially takes a timestamp, a target language, and formatting options, then returns display text such as “October 29,” “3 minutes ago,” or “3:00–5:00 PM.” Its core implementation is in C++, shared across platforms such as Android and iOS.
 
-## Trying Different Compiler Options First
+## Compiler Options
 
 The most straightforward attempt was to replace `-O2` with `-Oz`.
 
@@ -21,7 +21,7 @@ The effect was clear: the binary size dropped by more than half. However, after 
 
 Why would changing compiler options alone produce such a large size difference in the same code? Where exactly did that difference come from? If I could locate the source, perhaps I would not have to choose between the two optimization levels.
 
-## The Size Difference Was Concentrated in Global Initialization Code
+## Global Initialization
 
 Comparing the binaries, I found that most of the difference came from `.text`, the code section. Looking further, the locale configuration's global initialization functions, `__cxx_global_var_init*`, and the associated constructor code accounted for a large portion of it.
 
@@ -46,7 +46,7 @@ To understand this more clearly, I created two simplified examples: one retainin
 | Minimal configuration | [Godbolt](https://godbolt.org/z/oW6PnGr98) | 30 | 20 |
 | Complete configuration for one language | [Godbolt](https://godbolt.org/z/f4E9PsbsT) | 6000 | 2000 |
 
-## Why Does the Same Configuration Produce Different Machine Code?
+## O2 vs. Oz
 
 The minimal example retains just three months:
 
@@ -221,7 +221,7 @@ The difference between the two versions is therefore more than the number of fun
 
 That suggested the next direction: locale configurations are fixed data, so do they really need to exist as large numbers of `std::string` objects? Storing the string bytes and indices directly would eliminate the need to construct these objects.
 
-## Replacing String Objects with a String Pool and Indices
+## String Pool
 
 In the original configuration, each string field corresponded to a `std::string`. The optimized representation has two parts: the string bytes are stored together in a static string pool, and each configuration field records only the offset and length of its string within that pool.
 
@@ -284,7 +284,7 @@ The month fields no longer own string storage that needs to be constructed. Inst
 
 The key to the optimization is the change in data representation: work previously performed to prepare the locale configuration can now be done during the build. At runtime, all that remains is to read the configuration and use the strings.
 
-## Preserving Readability Through the Build Process
+## Build-Time Generation
 
 This layout is suitable for machines to read, but not for direct maintenance. Manually calculating offsets in the string pool whenever a month name is added or a translation changes would be error-prone.
 
@@ -307,7 +307,7 @@ Read indices at runtime to retrieve the corresponding string slices
 
 The JSON files are the source for maintaining locale configuration, while the string pool and offset tables are build artifacts. This preserves the readability of the configuration without letting its handwritten format directly determine the runtime data structure.
 
-## The Optimized Read Operation
+## Reading Packed Strings
 
 Here is the assembly for the read operation in the earlier comparison example after adopting the packed configuration:
 
@@ -342,7 +342,7 @@ The three integers are the packed representations of the three offset and length
 
 Although the new representation involves decoding and an additional memory read, I expect the performance impact to be small because the string pool has a much more compact layout than the original collection of strings. The actual effect needs to be measured.
 
-## Results for This Project
+## Results
 
 After changing the data layout, I kept the original `-O2` compiler option and obtained the following results:
 
@@ -353,6 +353,6 @@ After changing the data layout, I kept the original `-O2` compiler option and ob
 
 The library loading and formatting performance measurements were taken on macOS and have not been repeated on a physical Android device.
 
-## An Aside
+## Inline Variables
 
 During the investigation, I also noticed an `inline` before the original configuration variable. Looking it up in the standard, I learned that inline variables were introduced in C++17. Subject to the definition rules, they allow a variable definition to appear in a header included by multiple translation units. See the [standard draft's explanation of inline](https://eel.is/c++draft/dcl.inline) and [cppreference](https://en.cppreference.com/cpp/language/inline).
