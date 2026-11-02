@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Publish only daily path/count aggregates; never publish API credentials."""
+"""Publish independent daily aggregates, never visitor records or credentials."""
 import datetime as dt
+import ipaddress
 import json
 import math
 import os
+import re
 from pathlib import Path
 import subprocess
 import urllib.request
@@ -13,6 +15,55 @@ OUTPUT = ROOT / "assets/analytics.json"
 CONFIG = ROOT / "analytics-config.json"
 ENDPOINT = "https://api.cloudflare.com/client/v4/graphql"
 BRANCH = "codex/analytics-data"
+BREAKDOWNS = {
+    "countries": "countryName",
+    "referrers": "refererHost",
+    "devices": "deviceType",
+    "browsers": "userAgentBrowser",
+    "systems": "userAgentOS",
+}
+
+
+def public_label(key, value, hostnames):
+    value = str(value or "").strip()
+    if key == "referrers":
+        if not value:
+            return "Direct / unknown"
+        # Export hostnames only, never referrer paths, queries, IPs, or credentials.
+        value = value.lower().rstrip(".")
+        try:
+            ipaddress.ip_address(value.strip("[]"))
+            return "Other"
+        except ValueError:
+            pass
+        if (len(value) > 253 or "." not in value
+                or not re.fullmatch(r"[a-z0-9-]+(?:\.[a-z0-9-]+)+", value)
+                or value.endswith((".local", ".internal", ".localhost", ".test"))):
+            return "Other"
+        return "This site" if value in hostnames else value
+    if not value:
+        return "Unknown"
+    # These dimensions contain category names, not raw User-Agent strings.
+    return value if re.fullmatch(r"[A-Za-z][A-Za-z0-9 ._()+/-]{0,63}", value) else "Other"
+
+
+def breakdowns(result, config):
+    output = {}
+    for key, field in BREAKDOWNS.items():
+        rows = result[key]  # Missing data is an error, not an empty distribution.
+        if len(rows) >= 10000:
+            raise RuntimeError(f"{key} result limit reached")
+        metric = "visits" if key == "referrers" else "views"
+        counts = {}
+        for row in rows:
+            label = public_label(key, row["dimensions"].get(field), config["hostnames"])
+            value = row["sum"]["visits"] if metric == "visits" else row["count"]
+            if not isinstance(value, (float, int)) or not math.isfinite(value) or value < 0:
+                raise RuntimeError(f"Invalid {key} count")
+            counts[label] = counts.get(label, 0) + round(value)
+        output[key] = [{"name": name, metric: value} for name, value in
+                       sorted(counts.items(), key=lambda item: (-item[1], item[0])) if value > 0]
+    return output
 
 
 def git(*args, input=None, check=True):
@@ -40,6 +91,10 @@ def fetch_day(token, config, day, now):
                "datetime_lt": end.isoformat(), "requestHost_in": config["hostnames"]}
     # JSON values also safely quote every interpolated GraphQL string.
     selector = ", ".join(f"{key}: {json.dumps(value)}" for key, value in filters.items())
+    grouped = "\n".join(
+        f"{key}: rumPageloadEventsAdaptiveGroups(limit: 10000, filter: {{{selector}}}) "
+        f"{{ count sum {{ visits }} dimensions {{ {field} }} }}"
+        for key, field in BREAKDOWNS.items())
     document = """{ viewer { accounts(filter: {accountTag: %s}) {
       total: rumPageloadEventsAdaptiveGroups(limit: 1, filter: {%s}) {
         count
@@ -48,7 +103,8 @@ def fetch_day(token, config, day, now):
       pages: rumPageloadEventsAdaptiveGroups(limit: 10000, filter: {%s}) {
         count dimensions { requestPath }
       }
-    } } }""" % (json.dumps(config["accountId"]), selector, selector)
+      %s
+    } } }""" % (json.dumps(config["accountId"]), selector, selector, grouped)
     accounts = query(token, document)["viewer"]["accounts"]
     if len(accounts) != 1:
         raise RuntimeError("The configured analytics account is unavailable")
@@ -72,7 +128,8 @@ def fetch_day(token, config, day, now):
             continue
         path = path.split("?", 1)[0].split("#", 1)[0]
         aggregate[path] = aggregate.get(path, 0) + round(row["count"])
-    return {"date": day.isoformat(), "views": round(total), "visits": round(visits), "pages": [
+    return {"date": day.isoformat(), "views": round(total), "visits": round(visits),
+            "breakdowns": breakdowns(result, config), "pages": [
         {"path": path, "views": views} for path, views in sorted(aggregate.items())]}
 
 
@@ -89,7 +146,7 @@ def sync(token, config, previous, now):
         if day.isoformat() not in existing or day >= today - dt.timedelta(days=6):
             existing[day.isoformat()] = fetch_day(token, config, day, now)
         day += dt.timedelta(days=1)
-    return {"schemaVersion": 2, "startedAt": start.isoformat(),
+    return {"schemaVersion": 3, "startedAt": start.isoformat(),
             "updatedAt": now.isoformat(), "days": [existing[key] for key in sorted(existing)]}
 
 

@@ -30,6 +30,11 @@
     chart.setAttribute('viewBox', `0 0 ${width} ${height}`);
     chart.querySelectorAll('g').forEach(node => node.remove());
     const group = svg('g', {});
+    if (!visible.length) {
+      group.append(svg('text', { x: 32, y: 30 }, 'No recorded data in this period.'));
+      chart.append(group);
+      return;
+    }
     const peak = Math.max(2, ...visible.map(day => metric(day, 'views') || 0), ...visible.map(day => metric(day, 'visits') || 0));
     const max = peak <= 10 ? Math.ceil(peak / 2) * 2 : Math.ceil(peak / 10) * 10;
     [0, max / 2, max].forEach(value => {
@@ -69,17 +74,64 @@
     chart.append(group);
   }
 
-  function render(days, range, anyVisits) {
-    const visible = range ? days.slice(-range) : days;
+  function renderBreakdowns(visible) {
+    const covered = visible.filter(day => day.breakdowns);
+    set('analytics-coverage', covered.length
+      ? `Audience breakdowns: ${covered[0].date}–${covered[covered.length - 1].date} UTC (${covered.length} of ${visible.length} recorded days). Percentages use the available data for each category.`
+      : 'Audience breakdowns are not available for these dates yet.');
+    const countryNames = typeof Intl.DisplayNames === 'function' ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
+    ['referrers', 'countries', 'devices', 'browsers', 'systems', 'pages'].forEach(key => {
+      const metricKey = key === 'referrers' ? 'visits' : 'views';
+      const counts = new Map();
+      (key === 'pages' ? visible : covered).forEach(day => {
+        const rows = key === 'pages' ? (day.pages || []).map(page => ({ name: page.path, views: page.views })) : day.breakdowns[key] || [];
+        rows.forEach(row => counts.set(row.name, (counts.get(row.name) || 0) + row[metricKey]));
+      });
+      let rows = [...counts].filter(([, value]) => value > 0).sort((a, b) => b[1] - a[1]);
+      const sum = rows.reduce((n, [, value]) => n + value, 0);
+      if (rows.length > 10) rows = [...rows.slice(0, 10), ['Other categories', rows.slice(10).reduce((n, [, value]) => n + value, 0)]];
+      const list = document.getElementById(`analytics-${key}-list`);
+      list.replaceChildren();
+      document.getElementById(`analytics-${key}-empty`).hidden = rows.length > 0;
+      rows.forEach(([name, value]) => {
+        const row = document.createElement('li');
+        const label = document.createElement('span');
+        const count = document.createElement('span');
+        const bar = document.createElement('span');
+        let display = name;
+        if (key === 'countries' && countryNames && /^[A-Z]{2}$/.test(name)) display = countryNames.of(name) || name;
+        if (key === 'pages') display = articles[name] || ({ '/': 'Home', '/analytics/': 'Analytics', '/archive.html': 'Archives', '/tags.html': 'Tags' })[name] || name;
+        label.textContent = display;
+        label.className = 'analytics-ranking-label';
+        const percent = value / sum * 100;
+        count.textContent = `${number.format(value)} · ${percent < 0.1 ? '<0.1' : percent.toFixed(1)}%`;
+        count.className = 'analytics-ranking-count';
+        bar.className = 'analytics-ranking-bar';
+        bar.style.width = `${percent}%`;
+        bar.setAttribute('aria-hidden', 'true');
+        row.append(label, count, bar);
+        list.append(row);
+      });
+    });
+  }
+
+  function render(days, range) {
+    const cutoff = new Date(); cutoff.setUTCHours(0, 0, 0, 0); cutoff.setUTCDate(cutoff.getUTCDate() - range + 1);
+    const visible = range ? days.filter(day => day.date >= cutoff.toISOString().slice(0, 10)) : days;
+    const anyVisits = hasVisits(visible);
     const views = total(visible, 'views');
     const visits = total(visible, 'visits');
     const span = `${visible.length} ${visible.length === 1 ? 'day' : 'days'}`;
     const description = anyVisits
-      ? `${number.format(views)} page views and ${number.format(visits)} visits over ${span}.`
+      ? `${number.format(views)} page views and ${number.format(visits)} visits over ${span}${visible.some(day => metric(day, 'visits') === null) ? "; visit counts are incomplete for older dates" : ""}.`
       : `${number.format(views)} page views over ${span}.`;
     set('analytics-chart-desc', `${description} Daily values are available in the table below.`);
     set('analytics-chart-caption', description);
-    set('analytics-period', range ? `Last ${range} days` : 'All time');
+    set('analytics-period', range ? `Last ${range} days · UTC` : 'All time · UTC');
+    set('analytics-views-total', number.format(views));
+    set('analytics-visits-total', anyVisits ? number.format(visits) : '—');
+    document.getElementById('analytics-visits-legend').hidden = !anyVisits;
+    renderBreakdowns(visible);
     drawChart(visible);
     const daily = document.getElementById('analytics-days');
     daily.replaceChildren();
@@ -117,22 +169,18 @@
       return;
     }
     const today = new Date().toISOString().slice(0, 10);
-    const cutoff = new Date(`${today}T00:00:00Z`); cutoff.setUTCDate(cutoff.getUTCDate() - 29);
-    const month = cutoff.toISOString().slice(0, 10);
     const days = data.days.slice().sort((a, b) => a.date.localeCompare(b.date));
     const anyVisits = hasVisits(days);
     const within = key => days.filter(day => key(day));
     set('analytics-start', data.startedAt);
     set('analytics-start-note', data.startedAt);
-    set('analytics-views-total', number.format(total(days, 'views')));
-    set('analytics-views-month', number.format(total(within(day => day.date >= month), 'views')));
-    set('analytics-views-today', number.format(total(within(day => day.date === today), 'views')));
+    set('analytics-views-all', number.format(total(days, 'views')));
+    set('analytics-views-today', days.some(day => day.date === today) ? number.format(total(within(day => day.date === today), 'views')) : '—');
     if (anyVisits) {
-      set('analytics-visits-total', number.format(total(days, 'visits')));
-      set('analytics-visits-month', number.format(total(within(day => day.date >= month), 'visits')));
-      set('analytics-visits-today', number.format(total(within(day => day.date === today), 'visits')));
+      set('analytics-visits-all', number.format(total(days, 'visits')));
+      set('analytics-visits-today', hasVisits(within(day => day.date === today)) ? number.format(total(within(day => day.date === today), 'visits')) : '—');
     } else {
-      ['analytics-visits-total', 'analytics-visits-month', 'analytics-visits-today'].forEach(id => set(id, '—'));
+      ['analytics-visits-total', 'analytics-visits-all', 'analytics-visits-today'].forEach(id => set(id, '—'));
       document.getElementById('analytics-visits-legend').hidden = true;
     }
     const updated = new Date(data.updatedAt);
@@ -140,11 +188,11 @@
     const stamp = updated.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'UTC' });
     status.textContent = `${stale ? 'Update delayed · Last updated' : 'Updated'} ${stamp} UTC`;
     document.getElementById('analytics-results').hidden = false;
-    let visible = render(days, 30, anyVisits);
+    let visible = render(days, 30);
     const buttons = root.querySelectorAll('[data-range]');
     buttons.forEach(button => button.addEventListener('click', () => {
       buttons.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-      visible = render(days, Number(button.dataset.range), anyVisits);
+      visible = render(days, Number(button.dataset.range));
     }));
     new ResizeObserver(() => drawChart(visible)).observe(document.getElementById('analytics-chart'));
   }).catch(() => {

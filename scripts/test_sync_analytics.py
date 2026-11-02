@@ -20,16 +20,23 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result["days"][4]["views"], 2)
         self.assertEqual(result["days"][-1]["views"], 2)
 
+    def add_empty_breakdowns(self, answer):
+        for key in analytics.BREAKDOWNS:
+            answer["viewer"]["accounts"][0][key] = []
+        return answer
+
     def test_no_data_is_a_valid_zero_and_paths_are_sanitized(self):
         answer = {"viewer": {"accounts": [{"total": [{"count": 3, "sum": {"visits": 2}}], "pages": [
             {"count": 2, "dimensions": {"requestPath": "/post.html?private=1"}},
             {"count": 1, "dimensions": {"requestPath": "/post.html#fragment"}}]}]}}
+        self.add_empty_breakdowns(answer)
         with patch.object(analytics, "query", return_value=answer) as query:
             day = analytics.fetch_day("unused", self.config, self.now.date(), self.now)
         self.assertIn('requestHost_in: ["example.com", "example.me"]', query.call_args.args[1])
         self.assertEqual(day["pages"], [{"path": "/post.html", "views": 3}])
         self.assertEqual(day["visits"], 2)
         answer["viewer"]["accounts"][0] = {"total": [], "pages": []}
+        self.add_empty_breakdowns(answer)
         with patch.object(analytics, "query", return_value=answer):
             self.assertEqual(analytics.fetch_day("unused", self.config, self.now.date(), self.now)["views"], 0)
 
@@ -49,6 +56,41 @@ class SnapshotTests(unittest.TestCase):
         with patch.object(analytics, "query", return_value=answer):
             with self.assertRaises(RuntimeError):
                 analytics.fetch_day("unused", self.config, self.now.date(), self.now)
+
+    def test_breakdowns_publish_only_independent_safe_categories(self):
+        result = {key: [] for key in analytics.BREAKDOWNS}
+        result["referrers"] = [
+            {"count": 8, "sum": {"visits": 2}, "dimensions": {"refererHost": "github.com"}},
+            {"count": 5, "sum": {"visits": 1}, "dimensions": {"refererHost": ""}},
+            {"count": 1, "sum": {"visits": 1}, "dimensions": {"refererHost": "192.0.2.1"}},
+            {"count": 1, "sum": {"visits": 1}, "dimensions": {"refererHost": "https://private.example/a?key=secret"}},
+        ]
+        result["countries"] = [{"count": 8, "dimensions": {"countryName": "US"}}]
+        output = analytics.breakdowns(result, self.config)
+        self.assertEqual(output["countries"], [{"name": "US", "views": 8}])
+        sources = {row["name"]: row["visits"] for row in output["referrers"]}
+        self.assertEqual(sources, {"github.com": 2, "Other": 2, "Direct / unknown": 1})
+        import json
+        serialized = json.dumps(output)
+        self.assertNotIn("192.0.2.1", serialized)
+        self.assertNotIn("secret", serialized)
+        self.assertNotIn("refererHost", serialized)
+
+    def test_missing_or_truncated_breakdowns_fail_instead_of_publishing_empty_data(self):
+        with self.assertRaises(KeyError):
+            analytics.breakdowns({}, self.config)
+        result = {key: [] for key in analytics.BREAKDOWNS}
+        result["browsers"] = [{}] * 10000
+        with self.assertRaises(RuntimeError):
+            analytics.breakdowns(result, self.config)
+
+    def test_legacy_days_are_not_given_invented_breakdowns(self):
+        previous = {"days": [{"date": "2026-10-01", "views": 9, "pages": []}]}
+        with patch.object(analytics, "fetch_day", side_effect=lambda token, config, day, now:
+                          {"date": day.isoformat(), "views": 0, "pages": [], "breakdowns": {}}):
+            data = analytics.sync("unused", self.config, previous, self.now)
+        self.assertNotIn("breakdowns", data["days"][0])
+        self.assertEqual(data["schemaVersion"], 3)
 
 
 if __name__ == "__main__":

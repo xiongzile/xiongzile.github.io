@@ -2,7 +2,7 @@
 layout: default
 title: Analytics
 permalink: /analytics/
-description: Public page-view and visit totals, daily trends, and popular articles.
+description: Public traffic trends, popular articles, countries, referrers, and device statistics.
 ---
 <link rel="stylesheet" href="{{ '/assets/analytics.css' | relative_url }}?v={{ site.time | date: '%s' }}">
 <main class="analytics-page">
@@ -12,14 +12,29 @@ description: Public page-view and visit totals, daily trends, and popular articl
       <p>Public traffic statistics <span aria-hidden="true">·</span> Since <span id="analytics-start">tracking began</span></p>
       <p id="analytics-status" role="status">Loading statistics…</p>
     </div>
+    <section class="analytics-preference" aria-label="Your browser">
+      <div>
+        <p id="analytics-preference-status" role="status">Checking your browser preference…</p>
+        <p class="analytics-muted">Applies to this browser from now on, even if your IP changes. Past visits remain in the totals.</p>
+      </div>
+      <button type="button" id="analytics-exclude" aria-pressed="false">Ignore my visits</button>
+    </section>
     <noscript><p>Enable JavaScript to view the dashboard, or <a href="{{ '/assets/analytics.json' | relative_url }}">read the data</a>.</p></noscript>
     <div id="analytics-results" hidden>
+      <div class="analytics-section-heading analytics-period-heading">
+        <p id="analytics-period" class="analytics-muted">Last 30 days</p>
+        <div class="analytics-ranges" role="group" aria-label="Time range">
+          <button type="button" data-range="7" aria-pressed="false">7 days</button>
+          <button type="button" data-range="30" aria-pressed="true">30 days</button>
+          <button type="button" data-range="0" aria-pressed="false">All time</button>
+        </div>
+      </div>
       <dl class="analytics-totals">
         <div class="analytics-metric">
           <dt>Page views</dt>
           <dd id="analytics-views-total">—</dd>
           <div class="analytics-breakdown">
-            <span><span class="analytics-label">Last 30 days</span> <span id="analytics-views-month">—</span></span>
+            <span><span class="analytics-label">All time</span> <span id="analytics-views-all">—</span></span>
             <span><span class="analytics-label">Today <span class="analytics-muted">UTC</span></span> <span id="analytics-views-today">—</span></span>
           </div>
         </div>
@@ -27,7 +42,7 @@ description: Public page-view and visit totals, daily trends, and popular articl
           <dt>Visits</dt>
           <dd id="analytics-visits-total">—</dd>
           <div class="analytics-breakdown">
-            <span><span class="analytics-label">Last 30 days</span> <span id="analytics-visits-month">—</span></span>
+            <span><span class="analytics-label">All time</span> <span id="analytics-visits-all">—</span></span>
             <span><span class="analytics-label">Today <span class="analytics-muted">UTC</span></span> <span id="analytics-visits-today">—</span></span>
           </div>
         </div>
@@ -35,11 +50,7 @@ description: Public page-view and visit totals, daily trends, and popular articl
       <section class="analytics-section" aria-labelledby="analytics-trend-title">
         <div class="analytics-section-heading">
           <h2 id="analytics-trend-title">Daily traffic</h2>
-          <div class="analytics-ranges" role="group" aria-label="Time range">
-            <button type="button" data-range="7" aria-pressed="false">7 days</button>
-            <button type="button" data-range="30" aria-pressed="true">30 days</button>
-            <button type="button" data-range="0" aria-pressed="false">All time</button>
-          </div>
+
         </div>
         <p class="analytics-legend">
           <span class="analytics-legend-item"><span class="analytics-swatch analytics-swatch-views" aria-hidden="true"></span>Page views</span>
@@ -60,18 +71,58 @@ description: Public page-view and visit totals, daily trends, and popular articl
       <section class="analytics-section" aria-labelledby="analytics-popular-title">
         <div class="analytics-section-heading">
           <h2 id="analytics-popular-title">Popular articles</h2>
-          <span id="analytics-period" class="analytics-muted">Last 30 days</span>
+
         </div>
         <p id="analytics-popular-empty" class="analytics-muted" hidden>No article views in this period yet.</p>
         <div class="analytics-table" id="analytics-popular-table">
           <table><thead><tr><th scope="col">Article</th><th scope="col">Views</th></tr></thead><tbody id="analytics-popular"></tbody></table>
         </div>
       </section>
+      <section class="analytics-section" aria-labelledby="analytics-audience-title">
+        <div class="analytics-section-heading">
+          <h2 id="analytics-audience-title">Traffic sources &amp; audience</h2>
+        </div>
+        <p id="analytics-coverage" class="analytics-muted"></p>
+        <div class="analytics-distributions">
+          <section class="analytics-distribution" aria-labelledby="analytics-referrers-title">
+            <div class="analytics-section-heading"><h3 id="analytics-referrers-title">Referring sites</h3><span>Visits · Share</span></div>
+            <p id="analytics-referrers-empty" class="analytics-muted" hidden>No data for this period.</p>
+            <ol id="analytics-referrers-list" class="analytics-ranking"></ol>
+          </section>
+          <section class="analytics-distribution" aria-labelledby="analytics-countries-title">
+            <div class="analytics-section-heading"><h3 id="analytics-countries-title">Countries / regions</h3><span>Views · Share</span></div>
+            <p id="analytics-countries-empty" class="analytics-muted" hidden>No data for this period.</p>
+            <ol id="analytics-countries-list" class="analytics-ranking"></ol>
+          </section>
+          <section class="analytics-distribution" aria-labelledby="analytics-devices-title">
+            <div class="analytics-section-heading"><h3 id="analytics-devices-title">Devices</h3><span>Views · Share</span></div>
+            <p id="analytics-devices-empty" class="analytics-muted" hidden>No data for this period.</p>
+            <ol id="analytics-devices-list" class="analytics-ranking"></ol>
+          </section>
+          <section class="analytics-distribution" aria-labelledby="analytics-browsers-title">
+            <div class="analytics-section-heading"><h3 id="analytics-browsers-title">Browsers</h3><span>Views · Share</span></div>
+            <p id="analytics-browsers-empty" class="analytics-muted" hidden>No data for this period.</p>
+            <ol id="analytics-browsers-list" class="analytics-ranking"></ol>
+          </section>
+          <section class="analytics-distribution" aria-labelledby="analytics-systems-title">
+            <div class="analytics-section-heading"><h3 id="analytics-systems-title">Operating systems</h3><span>Views · Share</span></div>
+            <p id="analytics-systems-empty" class="analytics-muted" hidden>No data for this period.</p>
+            <ol id="analytics-systems-list" class="analytics-ranking"></ol>
+          </section>
+          <section class="analytics-distribution" aria-labelledby="analytics-pages-title">
+            <div class="analytics-section-heading"><h3 id="analytics-pages-title">Pages</h3><span>Views · Share</span></div>
+            <p id="analytics-pages-empty" class="analytics-muted" hidden>No data for this period.</p>
+            <ol id="analytics-pages-list" class="analytics-ranking"></ol>
+          </section>
+        </div>
+      </section>
       <details class="analytics-about">
         <summary>About these statistics</summary>
-        <p><strong>Page views</strong> count every successful HTML response, including reloads and repeat visits by the same reader. <strong>Visits</strong> count page loads that came from another site or a direct link, so one visit can contain several page views. Neither number identifies people: there is no visitor deduplication, and neither is a unique-reader count.</p>
+        <p><strong>Page views</strong> count page loads reported by the browser, including repeat visits and reloads. <strong>Visits</strong> count page loads that came from another site or a direct link, so one visit can contain several page views. Neither number identifies people: there is no visitor deduplication, and neither is a unique-reader count.</p>
+        <p>Only aggregate counts are published—no IP addresses, visitor identities, full referrer URLs, or individual browsing histories. Referring sites use visit counts; other distributions use page views. “Direct / unknown” can include links from apps or browsers that omit the referrer. Country is inferred from the network location and can reflect a VPN exit.
+        </p>
         <p>Source: Cloudflare Web Analytics. Updated every six hours. Cloudflare may sample or round values, so read these as approximate and comparable over time rather than exact. Dates use UTC and today is incomplete.</p>
-        <p>Tracking started on <span id="analytics-start-note"></span>. Earlier traffic is not included, and visits are only available from the day this dashboard started recording them.</p>
+        <p>Tracking started on <span id="analytics-start-note"></span>. Earlier traffic is not included, and older dates may lack visits or audience breakdowns. Missing data is shown as unavailable, not zero. Excluding this browser affects Web Analytics only; Cloudflare can still see network requests. Repeat this setting in other browsers or after clearing site storage. Reload other open blog tabs after enabling it.</p>
       </details>
     </div>
   </div>

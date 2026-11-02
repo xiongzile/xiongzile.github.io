@@ -58,7 +58,26 @@
 #analytics .analytics-about strong { color: var(--primary-color); font-weight: 600; }
 #analytics [hidden] { display: none; }
 
+#analytics .analytics-preference { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 0; margin-bottom: 1.5rem; border-block: 0.5px solid var(--divider-color); font-size: 0.7rem; }
+#analytics .analytics-preference .analytics-muted { font-size: 0.6rem; margin-top: 0.2rem; }
+#analytics-exclude { flex-shrink: 0; background: transparent; border: 1px solid var(--divider-color); padding: 0.35rem 0.65rem; border-radius: 3px; color: var(--primary-color); font: inherit; cursor: pointer; }
+#analytics-exclude:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 3px; }
+#analytics-exclude:disabled { opacity: 0.6; cursor: default; }
+.analytics-period-heading { font-size: 0.7rem; }
+#analytics-coverage { font-size: 0.65rem; margin-bottom: 1rem !important; }
+.analytics-distributions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem 2.5rem; }
+#analytics h3 { margin: 0; font-size: 0.8rem; font-weight: 500; }
+.analytics-distribution { min-width: 0; }
+#analytics .analytics-ranking { list-style: none; padding: 0; margin: 0; font-size: 0.7rem; }
+.analytics-ranking li { position: relative; display: flex; justify-content: space-between; gap: 0.7rem; padding: 0.4rem 0 0.5rem; margin: 0 0 0.15rem; }
+.analytics-ranking-label { overflow-wrap: anywhere; min-width: 0; }
+.analytics-ranking-count { font-size: 0.65rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--meta-color); }
+.analytics-ranking-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--primary-color); opacity: 0.25; }
+.analytics-distribution > .analytics-muted { font-size: 0.65rem; }
+
 @media (max-width: 600px) {
+  .analytics-distributions { grid-template-columns: 1fr; }
+  #analytics .analytics-preference { align-items: flex-start; flex-direction: column; }
   #analytics .analytics-totals { grid-template-columns: 1fr; gap: 1.25rem; }
   .analytics-totals > div + div { padding-inline-start: 0; border-inline-start: 0; border-top: 0.5px solid var(--divider-color); padding-top: 1.1rem; }
   .analytics-metric dd { font-size: 2.1rem; }

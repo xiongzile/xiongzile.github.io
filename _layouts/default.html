@@ -75,7 +75,7 @@
     </section>
   </footer>
   {% if site.analytics.beacon_token %}
-  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":{{ site.analytics.beacon_token | jsonify }}}'></script>
+  <script src="{{ '/assets/analytics-preference.js' | relative_url }}?v=1" data-token={{ site.analytics.beacon_token | jsonify }}></script>
   {% endif %}
 </body>
 </html>

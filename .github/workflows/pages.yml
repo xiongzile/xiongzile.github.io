@@ -26,6 +26,8 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts -p 'test_*.py'
           node --check assets/analytics.js
+          node --check assets/analytics-preference.js
+          node --test scripts/test_analytics_preference.cjs
       - name: Update public analytics snapshot
         id: analytics
         continue-on-error: true
